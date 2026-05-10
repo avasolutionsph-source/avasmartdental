@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { fadeUp, stagger, inViewProps } from "../lib/motion";
 
 const faqs = [
   {
@@ -33,39 +35,56 @@ export function FAQ() {
   return (
     <section id="faq" className="relative py-12 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-4xl px-5 sm:px-8">
-        <div className="reveal divide-y divide-line rounded-2xl border border-line bg-white">
+        <motion.div
+          className="divide-y divide-line rounded-2xl border border-line bg-white"
+          variants={stagger(0, 0.06)}
+          {...inViewProps}
+        >
           {faqs.map((f, i) => {
             const isOpen = open === i;
             return (
-              <div key={f.q}>
+              <motion.div key={f.q} variants={fadeUp}>
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? null : i)}
-                  className="flex w-full items-start justify-between gap-4 px-5 py-5 text-left transition hover:bg-surface-2 sm:gap-6 sm:px-6"
+                  className="flex w-full items-start justify-between gap-4 px-5 py-5 text-left transition-colors duration-200 hover:bg-surface-2 sm:gap-6 sm:px-6"
                   aria-expanded={isOpen}
                 >
                   <span className="text-[15px] font-bold leading-snug tracking-tight text-fg sm:text-[17px]">
                     {f.q}
                   </span>
-                  <span
-                    className={`mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                  <motion.span
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.3, ease: [0.2, 0.7, 0.2, 1] }}
+                    className={`mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors duration-200 ${
                       isOpen
                         ? "bg-brand-600 text-white"
                         : "bg-surface-3 text-fg-muted"
                     }`}
                   >
                     {isOpen ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                  </span>
+                  </motion.span>
                 </button>
-                {isOpen && (
-                  <div className="px-5 pb-5 text-[14px] leading-relaxed text-fg-muted sm:px-6 sm:pb-6 sm:text-[15px]">
-                    {f.a}
-                  </div>
-                )}
-              </div>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      key="content"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.32, ease: [0.2, 0.7, 0.2, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-5 pb-5 text-[14px] leading-relaxed text-fg-muted sm:px-6 sm:pb-6 sm:text-[15px]">
+                        {f.a}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

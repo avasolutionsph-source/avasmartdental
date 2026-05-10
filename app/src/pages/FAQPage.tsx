@@ -2,10 +2,8 @@ import { useEffect } from "react";
 import { Nav } from "../sections/Nav";
 import { FAQ } from "../sections/FAQ";
 import { Footer } from "../sections/Footer";
-import { useReveal } from "../lib/useReveal";
 
 export default function FAQPage() {
-  useReveal();
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = "FAQ — Ava Smart Dental";

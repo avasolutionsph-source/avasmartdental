@@ -2,10 +2,8 @@ import { useEffect } from "react";
 import { Nav } from "../sections/Nav";
 import { Pricing } from "../sections/Pricing";
 import { Footer } from "../sections/Footer";
-import { useReveal } from "../lib/useReveal";
 
 export default function PricingPage() {
-  useReveal();
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = "Pricing — Ava Smart Dental";

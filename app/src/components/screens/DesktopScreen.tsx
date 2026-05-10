@@ -13,6 +13,7 @@ import {
   Settings,
   AlertCircle,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 export function DesktopScreen() {
   return (
@@ -73,7 +74,7 @@ export function DesktopScreen() {
             </div>
             <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-md bg-white ring-1 ring-[#ebe6f5]">
               <Bell className="h-3 w-3 text-[#5b5176]" />
-              <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-rose-500" />
+              <span className="pulse-ring absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-rose-500 text-rose-500" />
             </span>
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#7c3aed] text-[9px] font-bold text-white">
               DS
@@ -172,10 +173,12 @@ export function DesktopScreen() {
                 </p>
                 <div className="mt-2 flex h-8 items-end gap-0.5">
                   {[40, 55, 30, 70, 65, 80, 60, 90, 75, 85].map((h, i) => (
-                    <span
+                    <motion.span
                       key={i}
+                      initial={{ height: 0 }}
+                      animate={{ height: `${h}%` }}
+                      transition={{ duration: 0.7, delay: 0.8 + i * 0.05, ease: [0.2, 0.7, 0.2, 1] }}
                       className="flex-1 rounded-t-sm bg-gradient-to-t from-[#bfa3ff] to-[#7c3aed]"
-                      style={{ height: `${h}%` }}
                     />
                   ))}
                 </div>
