@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fraunces", ui-serif, Georgia, serif;
+
+  /* Brand — soft boutique-dental violet on warm white */
+  --color-brand-50:  #f6f3ff;
+  --color-brand-100: #ece4ff;
+  --color-brand-200: #d9c9ff;
+  --color-brand-300: #bfa3ff;
+  --color-brand-400: #a07ef7;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+  --color-brand-950: #2e1065;
+
+  /* Light surface scale — warm, slight violet undertone */
+  --color-bg:        #fbfaff;   /* page */
+  --color-surface-1: #ffffff;   /* card */
+  --color-surface-2: #f6f3fc;   /* nested / soft wash */
+  --color-surface-3: #ece8f6;   /* hover */
+
+  --color-line:    #ebe6f5;
+  --color-line-2:  #d9d2eb;
+
+  /* Text */
+  --color-fg:        #1c1530;   /* headlines */
+  --color-fg-2:      #2c2447;   /* body */
+  --color-fg-muted:  #5b5176;
+  --color-fg-subtle: #847ba0;
+  --color-fg-faint:  #b0a9c9;
+}
+
+html, body { margin: 0; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-feature-settings: "ss01", "cv11";
+}
+
+.font-display {
+  font-family: var(--font-sans);
+  letter-spacing: -0.02em;
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+
+/* Subtle dotted grid for hero ambient */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(124, 58, 237, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(124, 58, 237, 0.07) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* Hero ambient glow — light violet washes */
+.hero-glow {
+  background:
+    radial-gradient(900px 520px at 50% -10%, rgba(139, 92, 246, 0.18), transparent 60%),
+    radial-gradient(700px 400px at 50% 90%, rgba(192, 163, 255, 0.18), transparent 60%);
+}
+
+/* Reveal */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reveal { opacity: 0; }
+.reveal.in-view {
+  animation: fadeUp 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Light shadow */
+.shadow-clinical {
+  box-shadow:
+    0 1px 0 rgba(28, 21, 48, 0.04),
+    0 8px 24px -8px rgba(124, 58, 237, 0.18),
+    0 24px 48px -24px rgba(28, 21, 48, 0.18);
+}
+
+/* Device shadow — softer for light backdrop */
+.shadow-device {
+  box-shadow:
+    0 30px 60px -20px rgba(28, 21, 48, 0.22),
+    0 12px 24px -8px rgba(124, 58, 237, 0.14);
+}
+
+/* Gradient text */
+.text-gradient-brand {
+  background: linear-gradient(180deg, #2e1065 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Marquee */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-track { animation: marquee 35s linear infinite; }
+
+.tooth { transition: fill 150ms ease, stroke 150ms ease; }
