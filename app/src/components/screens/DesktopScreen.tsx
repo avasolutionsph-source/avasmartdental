@@ -9,11 +9,11 @@ import {
   Search,
   PieChart,
   Pill,
-  Receipt,
   Settings,
   AlertCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { PesoReceipt } from "../icons/PesoReceipt";
 
 export function DesktopScreen() {
   return (
@@ -35,7 +35,7 @@ export function DesktopScreen() {
               { i: <Stethoscope className="h-3 w-3" />, l: "Treatments" },
               { i: <Wallet className="h-3 w-3" />, l: "Billing" },
               { i: <Pill className="h-3 w-3" />, l: "Prescriptions" },
-              { i: <Receipt className="h-3 w-3" />, l: "Expenses" },
+              { i: <PesoReceipt className="h-3 w-3" />, l: "Expenses" },
               { i: <PieChart className="h-3 w-3" />, l: "Reports" },
             ].map((it) => (
               <li

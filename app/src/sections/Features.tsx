@@ -3,11 +3,11 @@ import {
   Calendar,
   Stethoscope,
   Wallet,
-  Receipt,
   PieChart,
   Pill,
   FileText,
 } from "lucide-react";
+import { PesoReceipt } from "../components/icons/PesoReceipt";
 
 const features = [
   { icon: Users, title: "Patients", desc: "1,800+ records, tagged, searchable in milliseconds." },
@@ -15,7 +15,7 @@ const features = [
   { icon: Stethoscope, title: "Dental chart", desc: "Interactive FDI 11–85 chart that auto-saves silently." },
   { icon: Wallet, title: "Billing", desc: "Invoices, installments, GCash, Resibo printing in ₱." },
   { icon: Pill, title: "Prescriptions", desc: "Editable Rx pad, full drug catalog, print and re-print." },
-  { icon: Receipt, title: "Expenses", desc: "Track clinic spending by category with breakdown bars." },
+  { icon: PesoReceipt, title: "Expenses", desc: "Track clinic spending by category with breakdown bars." },
   { icon: PieChart, title: "Reports", desc: "Income, expenses, net profit, top procedures, outstanding." },
   { icon: FileText, title: "PDA forms", desc: "Patient Info, Medical History, Consent — all paperless." },
 ];
