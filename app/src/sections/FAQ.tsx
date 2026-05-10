@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { fadeUp, stagger, inViewProps } from "../lib/motion";
 
 const faqs = [
   {
@@ -30,20 +29,18 @@ const faqs = [
   },
 ];
 
+const delays = ["fade-in-d1", "fade-in-d2", "fade-in-d3", "fade-in-d4", "fade-in-d5", "fade-in-d6"];
+
 export function FAQ() {
   const [open, setOpen] = useState<number | null>(0);
   return (
     <section id="faq" className="relative py-12 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-4xl px-5 sm:px-8">
-        <motion.div
-          className="divide-y divide-line rounded-2xl border border-line bg-white"
-          variants={stagger(0, 0.06)}
-          {...inViewProps}
-        >
+        <div className="divide-y divide-line rounded-2xl border border-line bg-white">
           {faqs.map((f, i) => {
             const isOpen = open === i;
             return (
-              <motion.div key={f.q} variants={fadeUp}>
+              <div key={f.q} className={`fade-in ${delays[i]}`}>
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? null : i)}
@@ -53,17 +50,15 @@ export function FAQ() {
                   <span className="text-[15px] font-bold leading-snug tracking-tight text-fg sm:text-[17px]">
                     {f.q}
                   </span>
-                  <motion.span
-                    animate={{ rotate: isOpen ? 180 : 0 }}
-                    transition={{ duration: 0.3, ease: [0.2, 0.7, 0.2, 1] }}
-                    className={`mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors duration-200 ${
+                  <span
+                    className={`mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
                       isOpen
-                        ? "bg-brand-600 text-white"
+                        ? "rotate-180 bg-brand-600 text-white"
                         : "bg-surface-3 text-fg-muted"
                     }`}
                   >
                     {isOpen ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                  </motion.span>
+                  </span>
                 </button>
                 <AnimatePresence initial={false}>
                   {isOpen && (
@@ -81,10 +76,10 @@ export function FAQ() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
+              </div>
             );
           })}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

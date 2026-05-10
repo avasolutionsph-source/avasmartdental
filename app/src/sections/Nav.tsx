@@ -25,7 +25,7 @@ export function Nav() {
 
   function NavLink({ link, onClick }: { link: LinkItem; onClick?: () => void }) {
     const active = link.isRoute && pathname === link.href;
-    const cls = `text-sm font-medium transition-colors ${
+    const cls = `link-underline text-sm font-medium transition-colors ${
       active ? "text-fg" : "text-fg-muted hover:text-fg"
     }`;
     if (link.isRoute) {
@@ -69,7 +69,7 @@ export function Nav() {
           </a>
           <Link
             to="/pricing"
-            className="inline-flex items-center justify-center rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-700"
+            className="shimmer-sweep inline-flex items-center justify-center rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white transition-all duration-300 hover:bg-brand-700 hover:shadow-glow-brand"
           >
             Get Ava
           </Link>

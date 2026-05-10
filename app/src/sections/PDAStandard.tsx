@@ -2,8 +2,11 @@ import { ShieldCheck, Stethoscope, ClipboardList, ChevronLeft, ChevronRight } fr
 
 export function PDAStandard() {
   return (
-    <section className="relative py-16 sm:py-24 lg:py-28">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+    <section className="relative overflow-hidden py-16 sm:py-24 lg:py-28">
+      <div aria-hidden className="brand-blob b3 left-10 top-32 h-72 w-72" />
+      <div aria-hidden className="brand-blob b1 right-10 bottom-20 h-80 w-80" />
+
+      <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <span className="fade-in inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-700">
             <ShieldCheck className="h-3.5 w-3.5" />
@@ -55,7 +58,7 @@ const statusTopLeft: Record<number, string> = { 0: "C", 3: "C" };
 
 function PDAChartCard() {
   return (
-    <article className="reveal relative rounded-2xl border border-line bg-white p-4 shadow-clinical sm:p-6 lg:p-8">
+    <article className="card-hover relative rounded-2xl border border-line bg-white p-4 shadow-clinical hover:shadow-glow-brand sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -377,7 +380,7 @@ const medConditions = [
 
 function PDAFormsCard() {
   return (
-    <article className="reveal relative rounded-2xl border border-line bg-white p-4 shadow-clinical sm:p-6 lg:p-8">
+    <article className="card-hover relative rounded-2xl border border-line bg-white p-4 shadow-clinical hover:shadow-glow-brand sm:p-6 lg:p-8">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-700 sm:text-[11px]">

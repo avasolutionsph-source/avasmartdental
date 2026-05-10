@@ -17,18 +17,18 @@
   --color-brand-900: #4c1d95;
   --color-brand-950: #2e1065;
 
-  /* Light surface scale — warm, slight violet undertone */
-  --color-bg:        #fbfaff;   /* page */
-  --color-surface-1: #ffffff;   /* card */
-  --color-surface-2: #f6f3fc;   /* nested / soft wash */
-  --color-surface-3: #ece8f6;   /* hover */
+  /* Light surface scale */
+  --color-bg:        #fbfaff;
+  --color-surface-1: #ffffff;
+  --color-surface-2: #f6f3fc;
+  --color-surface-3: #ece8f6;
 
   --color-line:    #ebe6f5;
   --color-line-2:  #d9d2eb;
 
   /* Text */
-  --color-fg:        #1c1530;   /* headlines */
-  --color-fg-2:      #2c2447;   /* body */
+  --color-fg:        #1c1530;
+  --color-fg-2:      #2c2447;
   --color-fg-muted:  #5b5176;
   --color-fg-subtle: #847ba0;
   --color-fg-faint:  #b0a9c9;
@@ -49,18 +49,17 @@ body {
   font-feature-settings: "ss01", "cv11";
 }
 
-.font-display {
-  font-family: var(--font-sans);
-  letter-spacing: -0.02em;
-}
-
+.font-display { font-family: var(--font-sans); letter-spacing: -0.02em; }
 .font-serif {
   font-family: var(--font-serif);
   font-optical-sizing: auto;
   letter-spacing: -0.01em;
 }
 
-/* Subtle dotted grid for hero ambient */
+/* ============================================================
+   BACKGROUNDS
+   ============================================================ */
+
 .bg-grid {
   background-image:
     linear-gradient(to right, rgba(124, 58, 237, 0.07) 1px, transparent 1px),
@@ -68,35 +67,85 @@ body {
   background-size: 56px 56px;
 }
 
-/* Hero ambient glow — light violet washes */
 .hero-glow {
   background:
     radial-gradient(900px 520px at 50% -10%, rgba(139, 92, 246, 0.18), transparent 60%),
     radial-gradient(700px 400px at 50% 90%, rgba(192, 163, 255, 0.18), transparent 60%);
 }
 
-/* Reveal — JS-independent fade-up keyframes. animation-fill-mode: both
- * ensures the element stays visible after animating, AND if animations are
- * disabled (or fail to fire), content still renders normally. */
+/* Animated brand blobs — slow drifting color washes */
+.brand-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  opacity: 0.55;
+  z-index: -1;
+  will-change: transform;
+}
+.brand-blob.b1 { background: radial-gradient(circle, #bfa3ff 0%, transparent 70%); animation: blob-drift-1 22s ease-in-out infinite; }
+.brand-blob.b2 { background: radial-gradient(circle, #a07ef7 0%, transparent 70%); animation: blob-drift-2 28s ease-in-out infinite; }
+.brand-blob.b3 { background: radial-gradient(circle, #d9c9ff 0%, transparent 70%); animation: blob-drift-3 26s ease-in-out infinite; }
+
+@keyframes blob-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(40px, -30px) scale(1.08); }
+  66%      { transform: translate(-20px, 20px) scale(0.95); }
+}
+@keyframes blob-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-50px, 40px) scale(1.12); }
+}
+@keyframes blob-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(30px, -50px) scale(0.92); }
+}
+
+/* ============================================================
+   ENTRANCE — CSS-only fade-up that never depends on JS.
+   .fade-in fires immediately on mount and stays visible
+   thanks to animation-fill-mode: both.
+   ============================================================ */
+
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* Auto-fire on mount — used for above-the-fold critical content */
-.fade-in {
-  animation: fadeUp 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+@keyframes fadeUpLg {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.fade-in-d1 { animation-delay: 0.1s; }
-.fade-in-d2 { animation-delay: 0.25s; }
-.fade-in-d3 { animation-delay: 0.4s; }
-.fade-in-d4 { animation-delay: 0.55s; }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
 
-/* Legacy hooks — kept as no-ops in case any component still references them */
+.fade-in        { animation: fadeUp 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.fade-in-lg     { animation: fadeUpLg 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.fade-in-soft   { animation: fadeIn 0.9s ease-out both; }
+.fade-in-scale  { animation: scaleIn 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+.fade-in-d1 { animation-delay: 0.08s; }
+.fade-in-d2 { animation-delay: 0.16s; }
+.fade-in-d3 { animation-delay: 0.24s; }
+.fade-in-d4 { animation-delay: 0.32s; }
+.fade-in-d5 { animation-delay: 0.40s; }
+.fade-in-d6 { animation-delay: 0.48s; }
+.fade-in-d7 { animation-delay: 0.56s; }
+.fade-in-d8 { animation-delay: 0.64s; }
+
+/* Legacy hooks — kept as no-ops for any leftover references */
 .reveal { opacity: 1; }
 .reveal.in-view { opacity: 1; }
 
-/* Continuous floating motion for hero device cluster */
+/* ============================================================
+   CONTINUOUS / AMBIENT
+   ============================================================ */
+
 @keyframes float-y {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-6px); }
@@ -109,11 +158,12 @@ body {
 .float-mid  { animation: float-y 5.5s ease-in-out infinite; animation-delay: -1.2s; }
 .float-fast { animation: float-y 4.2s ease-in-out infinite; animation-delay: -2.4s; }
 
-/* Soft pulsing dot (notification, recall, "live" indicators) */
+/* Pulsing ring (notification dot, "live" indicators) */
 @keyframes pulse-ring {
   0%   { transform: scale(0.85); opacity: 0.7; }
-  100% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.4); opacity: 0; }
 }
+.pulse-ring { position: relative; }
 .pulse-ring::after {
   content: "";
   position: absolute;
@@ -123,13 +173,18 @@ body {
   animation: pulse-ring 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
 }
 
-/* Slow rotating conic gradient — used behind hero glow */
-@keyframes spin-slow {
-  to { transform: rotate(360deg); }
+/* Subtle pulse (no expanding ring, just the element itself) */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.7; transform: scale(1.06); }
 }
+.pulse-soft { animation: pulse-soft 2.4s ease-in-out infinite; }
+
+/* Slow rotating decorative element */
+@keyframes spin-slow { to { transform: rotate(360deg); } }
 .spin-slow { animation: spin-slow 24s linear infinite; }
 
-/* Animated gradient text shimmer */
+/* Animated gradient text — slow shift along the gradient */
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50%      { background-position: 100% 50%; }
@@ -143,7 +198,11 @@ body {
   animation: gradient-shift 8s ease-in-out infinite;
 }
 
-/* Underline grow on hover (for nav links etc.) */
+/* ============================================================
+   MICRO-INTERACTIONS — hover, focus, link
+   ============================================================ */
+
+/* Underline grow on hover */
 .link-underline {
   background-image: linear-gradient(currentColor, currentColor);
   background-position: 0% 100%;
@@ -153,45 +212,44 @@ body {
 }
 .link-underline:hover { background-size: 100% 1.5px; }
 
-/* Card hover lift + glow */
+/* Card hover */
 .card-hover {
   transition:
-    transform 280ms cubic-bezier(0.2, 0.7, 0.2, 1),
-    box-shadow 280ms cubic-bezier(0.2, 0.7, 0.2, 1),
-    border-color 280ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 320ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-color 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
   will-change: transform;
 }
-.card-hover:hover {
-  transform: translateY(-4px);
-}
+.card-hover:hover { transform: translateY(-4px); }
 
-/* Respect users who want reduced motion — disable all animations */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-  .float-slow, .float-mid, .float-fast,
-  .spin-slow, .pulse-ring::after { animation: none !important; }
-  .text-gradient-brand { animation: none !important; }
+/* Spotlight halo on card hover (radial gradient that brightens on hover) */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
 }
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%), rgba(124, 58, 237, 0.12), transparent 40%);
+  opacity: 0;
+  transition: opacity 320ms ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.spotlight:hover::before { opacity: 1; }
 
-/* Light shadow */
-.shadow-clinical {
-  box-shadow:
-    0 1px 0 rgba(28, 21, 48, 0.04),
-    0 8px 24px -8px rgba(124, 58, 237, 0.18),
-    0 24px 48px -24px rgba(28, 21, 48, 0.18);
+/* Icon micro-interaction: scale + slight rotate on group hover */
+.icon-spin {
+  transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1), background-color 320ms ease, color 320ms ease;
 }
+.group:hover .icon-spin { transform: scale(1.1) rotate(-6deg); }
 
-/* Device shadow — softer for light backdrop */
-.shadow-device {
-  box-shadow:
-    0 30px 60px -20px rgba(28, 21, 48, 0.22),
-    0 12px 24px -8px rgba(124, 58, 237, 0.14);
-}
+/* Animated arrow nudge on hover */
+.arrow-nudge { transition: transform 280ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.group:hover .arrow-nudge { transform: translateX(4px); }
 
 /* Marquee */
 @keyframes marquee {
@@ -200,4 +258,65 @@ body {
 }
 .marquee-track { animation: marquee 35s linear infinite; }
 
+/* Shimmer / sweep — for buttons */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+  background-size: 200% 100%;
+  transform: translateX(-100%);
+  transition: transform 600ms ease;
+  pointer-events: none;
+}
+.shimmer-sweep:hover::after { transform: translateX(100%); transition: transform 700ms ease; }
+
+/* ============================================================
+   SHADOWS
+   ============================================================ */
+
+.shadow-clinical {
+  box-shadow:
+    0 1px 0 rgba(28, 21, 48, 0.04),
+    0 8px 24px -8px rgba(124, 58, 237, 0.18),
+    0 24px 48px -24px rgba(28, 21, 48, 0.18);
+}
+.shadow-device {
+  box-shadow:
+    0 30px 60px -20px rgba(28, 21, 48, 0.22),
+    0 12px 24px -8px rgba(124, 58, 237, 0.14);
+}
+.shadow-glow-brand {
+  box-shadow:
+    0 0 0 1px rgba(124, 58, 237, 0.18),
+    0 8px 24px -6px rgba(124, 58, 237, 0.45),
+    0 24px 60px -20px rgba(124, 58, 237, 0.55);
+}
+
+/* Tooth chart hover */
 .tooth { transition: fill 150ms ease, stroke 150ms ease; }
+
+/* ============================================================
+   REDUCED MOTION — respect user preference
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .float-slow, .float-mid, .float-fast,
+  .spin-slow, .pulse-ring::after, .pulse-soft,
+  .brand-blob, .text-gradient-brand,
+  .marquee-track { animation: none !important; }
+}
