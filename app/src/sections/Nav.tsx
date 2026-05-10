@@ -8,6 +8,7 @@ type LinkItem = { label: string; href: string; isRoute?: boolean };
 const links: LinkItem[] = [
   { label: "Features", href: "/#features" },
   { label: "Pricing", href: "/pricing", isRoute: true },
+  { label: "Downloads", href: "/downloads", isRoute: true },
   { label: "FAQ", href: "/faq", isRoute: true },
 ];
 

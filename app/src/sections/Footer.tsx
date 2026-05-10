@@ -7,6 +7,7 @@ const cols = [
       ["Features", "/#features"],
       ["Devices", "/#devices"],
       ["Pricing", "/pricing"],
+      ["Downloads", "/downloads"],
       ["FAQ", "/faq"],
     ],
   },
