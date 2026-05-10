@@ -75,15 +75,26 @@ body {
     radial-gradient(700px 400px at 50% 90%, rgba(192, 163, 255, 0.18), transparent 60%);
 }
 
-/* Reveal */
+/* Reveal — JS-independent fade-up keyframes. animation-fill-mode: both
+ * ensures the element stays visible after animating, AND if animations are
+ * disabled (or fail to fire), content still renders normally. */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.reveal { opacity: 0; }
-.reveal.in-view {
+
+/* Auto-fire on mount — used for above-the-fold critical content */
+.fade-in {
   animation: fadeUp 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
+.fade-in-d1 { animation-delay: 0.1s; }
+.fade-in-d2 { animation-delay: 0.25s; }
+.fade-in-d3 { animation-delay: 0.4s; }
+.fade-in-d4 { animation-delay: 0.55s; }
+
+/* Legacy hooks — kept as no-ops in case any component still references them */
+.reveal { opacity: 1; }
+.reveal.in-view { opacity: 1; }
 
 /* Continuous floating motion for hero device cluster */
 @keyframes float-y {

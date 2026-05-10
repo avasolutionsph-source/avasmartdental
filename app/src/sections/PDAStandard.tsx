@@ -1,56 +1,37 @@
 import { ShieldCheck, Stethoscope, ClipboardList, ChevronLeft, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
-import { fadeUp, stagger, inViewProps } from "../lib/motion";
 
 export function PDAStandard() {
   return (
     <section className="relative py-16 sm:py-24 lg:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <motion.div
-          className="mx-auto max-w-3xl text-center"
-          variants={stagger(0, 0.1)}
-          {...inViewProps}
-        >
-          <motion.span
-            variants={fadeUp}
-            className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-700"
-          >
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="fade-in inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-700">
             <ShieldCheck className="h-3.5 w-3.5" />
             PDA-compliant
-          </motion.span>
-          <motion.h2
-            variants={fadeUp}
-            className="mt-4 text-3xl font-bold leading-[1.1] tracking-tight text-fg sm:text-4xl lg:text-5xl"
-          >
+          </span>
+          <h2 className="fade-in fade-in-d1 mt-4 text-3xl font-bold leading-[1.1] tracking-tight text-fg sm:text-4xl lg:text-5xl">
             Built to{" "}
             <span className="text-brand-600">
               Philippine Dental Association
             </span>{" "}
             standards.
-          </motion.h2>
-          <motion.p
-            variants={fadeUp}
-            className="mx-auto mt-4 max-w-2xl text-base text-fg-muted sm:text-lg"
-          >
+          </h2>
+          <p className="fade-in fade-in-d2 mx-auto mt-4 max-w-2xl text-base text-fg-muted sm:text-lg">
             Walang shortcut. Yung dental record chart at PDA forms namin —
             customized talaga para sa Philippine dental clinics, sundo sa
             PDA standards mismo.
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
 
-        {/* Stacked full-width showcases */}
-        <motion.div
-          className="mt-10 space-y-5 sm:mt-14 sm:space-y-6"
-          variants={stagger(0.1, 0.18)}
-          {...inViewProps}
-        >
-          <motion.div variants={fadeUp}>
+        {/* Stacked full-width showcases — plain divs, always visible */}
+        <div className="mt-10 space-y-5 sm:mt-14 sm:space-y-6">
+          <div className="fade-in fade-in-d3">
             <PDAChartCard />
-          </motion.div>
-          <motion.div variants={fadeUp}>
+          </div>
+          <div className="fade-in fade-in-d4">
             <PDAFormsCard />
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -288,19 +269,15 @@ function ToothRow({
             {top && (
               <span className="text-[9px] tabular-nums leading-none text-fg-subtle">{n}</span>
             )}
-            {isCaries ? (
-              <motion.span
-                initial={{ scale: 0, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.4 }}
-                className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-rose-400 bg-rose-500 text-[10px] font-bold text-white shadow-sm"
-              >
-                C
-              </motion.span>
-            ) : (
-              <span className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-line-2 bg-white text-[10px] font-bold text-fg-subtle" />
-            )}
+            <span
+              className={`mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border text-[10px] font-bold ${
+                isCaries
+                  ? "border-rose-400 bg-rose-500 text-white shadow-sm"
+                  : "border-line-2 bg-white text-fg-subtle"
+              }`}
+            >
+              {isCaries ? "C" : ""}
+            </span>
             {!top && (
               <span className="mt-0.5 text-[9px] tabular-nums leading-none text-fg-subtle">{n}</span>
             )}

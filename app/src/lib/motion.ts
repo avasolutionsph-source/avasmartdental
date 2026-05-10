@@ -29,14 +29,12 @@ export const stagger = (delayChildren = 0, staggerChildren = 0.08): Variants => 
 });
 
 /**
- * Use with `whileInView` so the animation triggers once per page load.
- * `amount: "some"` fires as soon as ANY pixel of the element is visible.
- * Generous bottom margin pre-triggers elements while they're still below the fold,
- * ensuring they're already visible by the time the user scrolls to them
- * (much more robust than `amount: 0.18` on Safari + large desktops).
+ * Animate-on-mount props (no viewport detection).
+ * Critical content uses these so it's GUARANTEED to render even if the
+ * IntersectionObserver fails to fire (a known issue on Safari and certain
+ * desktop browsers). Animations still play on page load via `animate`.
  */
 export const inViewProps = {
   initial: "hidden" as const,
-  whileInView: "visible" as const,
-  viewport: { once: true, amount: "some" as const, margin: "0px 0px 200px 0px" },
+  animate: "visible" as const,
 };
