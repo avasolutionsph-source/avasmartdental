@@ -11,7 +11,7 @@ const items = [
 
 export function LocalSection() {
   return (
-    <section className="relative overflow-hidden py-24 sm:py-28">
+    <section className="relative overflow-hidden py-16 sm:py-24 lg:py-28">
       <div
         aria-hidden
         className="absolute inset-0 -z-10"
@@ -20,16 +20,16 @@ export function LocalSection() {
             "radial-gradient(700px 360px at 80% 20%, rgba(139,92,246,0.10), transparent 60%)",
         }}
       />
-      <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-12">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:gap-12 sm:px-8 lg:grid-cols-12">
         <div className="lg:col-span-5">
           <p className="reveal text-[12px] font-semibold uppercase tracking-[0.22em] text-brand-700">
             Engineered by a real dentist
           </p>
-          <h2 className="reveal mt-3 text-4xl font-bold tracking-tight text-fg sm:text-5xl">
+          <h2 className="reveal mt-3 text-3xl font-bold leading-[1.1] tracking-tight text-fg sm:text-4xl lg:text-5xl">
             Built by a dentist,{" "}
             <span className="text-brand-600">for dentists.</span>
           </h2>
-          <p className="reveal mt-5 text-lg leading-relaxed text-fg-muted">
+          <p className="reveal mt-5 text-base leading-relaxed text-fg-muted sm:text-lg">
             Foreign clinic software is built for US clinics by US engineers. Ava
             is engineered by a practicing Filipino dentist — every screen
             started from the operatory, not from a product spec. What you

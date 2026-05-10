@@ -50,13 +50,13 @@ const tiers = [
 
 export function Pricing() {
   return (
-    <section id="pricing" className="relative py-20 sm:py-24">
+    <section id="pricing" className="relative py-12 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-5 lg:grid-cols-3 lg:gap-4">
           {tiers.map((t) => (
             <article
               key={t.name}
-              className={`reveal relative flex flex-col rounded-3xl p-7 sm:p-8 ${
+              className={`reveal relative flex flex-col rounded-3xl p-6 sm:p-7 lg:p-8 ${
                 t.featured
                   ? "border-2 border-brand-600 bg-gradient-to-b from-brand-50 to-white text-fg shadow-clinical"
                   : "border border-line bg-white text-fg"

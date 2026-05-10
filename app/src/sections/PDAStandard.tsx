@@ -2,21 +2,21 @@ import { ShieldCheck, Stethoscope, ClipboardList, ChevronLeft, ChevronRight } fr
 
 export function PDAStandard() {
   return (
-    <section className="relative py-24 sm:py-28">
+    <section className="relative py-16 sm:py-24 lg:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <span className="reveal inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-700">
             <ShieldCheck className="h-3.5 w-3.5" />
             PDA-compliant
           </span>
-          <h2 className="reveal mt-4 text-4xl font-bold tracking-tight text-fg sm:text-5xl">
+          <h2 className="reveal mt-4 text-3xl font-bold leading-[1.1] tracking-tight text-fg sm:text-4xl lg:text-5xl">
             Built to{" "}
             <span className="text-brand-600">
               Philippine Dental Association
             </span>{" "}
             standards.
           </h2>
-          <p className="reveal mx-auto mt-4 max-w-2xl text-lg text-fg-muted">
+          <p className="reveal mx-auto mt-4 max-w-2xl text-base text-fg-muted sm:text-lg">
             Walang shortcut. Yung dental record chart at PDA forms namin —
             customized talaga para sa Philippine dental clinics, sundo sa
             PDA standards mismo.
@@ -24,7 +24,7 @@ export function PDAStandard() {
         </div>
 
         {/* Stacked full-width showcases */}
-        <div className="mt-14 space-y-6">
+        <div className="mt-10 space-y-5 sm:mt-14 sm:space-y-6">
           <PDAChartCard />
           <PDAFormsCard />
         </div>
@@ -51,36 +51,41 @@ const statusTopLeft: Record<number, string> = { 0: "C", 3: "C" };
 
 function PDAChartCard() {
   return (
-    <article className="reveal relative rounded-2xl border border-line bg-white p-6 shadow-clinical sm:p-8">
+    <article className="reveal relative rounded-2xl border border-line bg-white p-4 shadow-clinical sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-700">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-700 sm:text-[11px]">
             Form 01 · PDA standard
           </p>
-          <h3 className="mt-1 text-2xl font-bold tracking-tight text-fg">
+          <h3 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">
             Dental Record Chart
           </h3>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-line text-fg-muted">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <span className="hidden h-8 w-8 items-center justify-center rounded-full border border-line text-fg-muted sm:inline-flex">
             <ChevronLeft className="h-4 w-4" />
           </span>
           <div className="text-center">
-            <p className="text-[13px] font-semibold text-fg">Apr 18, 2026</p>
-            <p className="text-[10px] text-fg-subtle">Latest · 1 total record</p>
+            <p className="text-[12px] font-semibold text-fg sm:text-[13px]">Apr 18, 2026</p>
+            <p className="text-[9px] text-fg-subtle sm:text-[10px]">Latest · 1 total record</p>
           </div>
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-line text-fg-muted">
+          <span className="hidden h-8 w-8 items-center justify-center rounded-full border border-line text-fg-muted sm:inline-flex">
             <ChevronRight className="h-4 w-4" />
           </span>
-          <span className="ml-2 inline-flex items-center justify-center rounded-md bg-brand-600 px-3 py-1.5 text-xs font-bold text-white">
+          <span className="ml-1 inline-flex items-center justify-center rounded-md bg-brand-600 px-2.5 py-1.5 text-[11px] font-bold text-white sm:ml-2 sm:px-3 sm:text-xs">
             + New Chart
           </span>
         </div>
       </div>
 
+      {/* Mobile scroll hint */}
+      <p className="mt-4 text-center text-[10px] uppercase tracking-wider text-fg-subtle sm:hidden">
+        ← scroll to see full chart →
+      </p>
+
       {/* Chart body */}
-      <div className="mt-6 overflow-x-auto">
+      <div className="mt-3 overflow-x-auto sm:mt-6">
         <div className="min-w-[640px]">
           {/* STATUS top row */}
           <div className="grid grid-cols-[80px_1fr_24px_1fr_60px] items-center gap-2 py-1">
@@ -155,7 +160,7 @@ function PDAChartCard() {
       </div>
 
       {/* Legend */}
-      <div className="mt-7 border-t border-line pt-6">
+      <div className="mt-6 border-t border-line pt-5 sm:mt-7 sm:pt-6">
         <div className="flex items-center justify-between">
           <p className="text-[11px] font-bold uppercase tracking-wider text-fg">Legend</p>
           <a className="text-[11px] font-medium text-brand-600 hover:underline">Edit Legend</a>
@@ -196,7 +201,7 @@ function PDAChartCard() {
       </div>
 
       {/* Lower checklists */}
-      <div className="mt-7 grid gap-6 border-t border-line pt-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-5 border-t border-line pt-5 sm:mt-7 sm:gap-6 sm:pt-6 lg:grid-cols-4">
         <CheckGroup
           title="Periodontal Screening"
           items={["Gingivitis", "Early Periodontitis", "Moderate Periodontitis", "Advanced Periodontitis"]}
@@ -368,28 +373,28 @@ const medConditions = [
 
 function PDAFormsCard() {
   return (
-    <article className="reveal relative rounded-2xl border border-line bg-white p-6 shadow-clinical sm:p-8">
-      <div className="flex items-center justify-between">
+    <article className="reveal relative rounded-2xl border border-line bg-white p-4 shadow-clinical sm:p-6 lg:p-8">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-700">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-700 sm:text-[11px]">
             Form 02 · PDA standard
           </p>
-          <h3 className="mt-1 text-2xl font-bold tracking-tight text-fg">
-            PDA Forms — Patient Information + Medical History
+          <h3 className="mt-1 text-lg font-bold leading-tight tracking-tight text-fg sm:text-2xl">
+            PDA Forms — Patient Info + Medical History
           </h3>
         </div>
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-100">
-          <ClipboardList className="h-5 w-5" />
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-100 sm:h-10 sm:w-10">
+          <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5" />
         </span>
       </div>
 
       {/* Patient Information */}
-      <div className="mt-6 rounded-xl border border-line bg-surface-2 p-5 sm:p-6">
+      <div className="mt-5 rounded-xl border border-line bg-surface-2 p-4 sm:p-6">
         <div className="flex items-center justify-between">
-          <p className="text-[13px] font-bold text-fg">Patient Information</p>
+          <p className="text-[12px] font-bold text-fg sm:text-[13px]">Patient Information</p>
           <span className="text-[11px] font-medium text-brand-600">Edit</span>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 md:grid-cols-4">
+        <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:mt-4 sm:gap-x-6 sm:gap-y-4 sm:grid-cols-3 md:grid-cols-4">
           {pir.map(([label, val]) => (
             <div key={label}>
               <p className="text-[10px] font-bold uppercase tracking-wider text-fg-subtle">
@@ -402,12 +407,12 @@ function PDAFormsCard() {
       </div>
 
       {/* Medical History */}
-      <div className="mt-5 rounded-xl border border-line bg-surface-2 p-5 sm:p-6">
-        <p className="text-[13px] font-bold text-fg">Medical History</p>
-        <p className="mt-1 text-[11px] font-medium text-fg-muted">
+      <div className="mt-4 rounded-xl border border-line bg-surface-2 p-4 sm:mt-5 sm:p-6">
+        <p className="text-[12px] font-bold text-fg sm:text-[13px]">Medical History</p>
+        <p className="mt-1 text-[10px] font-medium text-fg-muted sm:text-[11px]">
           Medical Conditions (check all that apply)
         </p>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <div className="mt-3 grid grid-cols-1 gap-1.5 sm:mt-4 sm:grid-cols-3 sm:gap-2">
           {medConditions.map((c, i) => (
             <label
               key={c}

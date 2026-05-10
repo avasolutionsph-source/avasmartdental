@@ -34,9 +34,9 @@ const cols = [
 export function Footer() {
   return (
     <footer className="border-t border-line bg-surface-2">
-      <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8">
-        <div className="grid gap-10 lg:grid-cols-12">
-          <div className="lg:col-span-5">
+      <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-14">
+        <div className="grid gap-8 sm:gap-10 sm:grid-cols-2 lg:grid-cols-12">
+          <div className="sm:col-span-2 lg:col-span-5">
             <Logo size="lg" />
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-fg-muted">
               Ava Smart Dental is a subscription-based clinic management system

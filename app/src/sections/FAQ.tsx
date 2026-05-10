@@ -31,7 +31,7 @@ const faqs = [
 export function FAQ() {
   const [open, setOpen] = useState<number | null>(0);
   return (
-    <section id="faq" className="relative py-20 sm:py-24">
+    <section id="faq" className="relative py-12 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-4xl px-5 sm:px-8">
         <div className="reveal divide-y divide-line rounded-2xl border border-line bg-white">
           {faqs.map((f, i) => {
@@ -41,10 +41,10 @@ export function FAQ() {
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? null : i)}
-                  className="flex w-full items-start justify-between gap-6 px-6 py-5 text-left transition hover:bg-surface-2"
+                  className="flex w-full items-start justify-between gap-4 px-5 py-5 text-left transition hover:bg-surface-2 sm:gap-6 sm:px-6"
                   aria-expanded={isOpen}
                 >
-                  <span className="text-[17px] font-bold tracking-tight text-fg">
+                  <span className="text-[15px] font-bold leading-snug tracking-tight text-fg sm:text-[17px]">
                     {f.q}
                   </span>
                   <span
@@ -58,7 +58,7 @@ export function FAQ() {
                   </span>
                 </button>
                 {isOpen && (
-                  <div className="px-6 pb-6 text-[15px] leading-relaxed text-fg-muted">
+                  <div className="px-5 pb-5 text-[14px] leading-relaxed text-fg-muted sm:px-6 sm:pb-6 sm:text-[15px]">
                     {f.a}
                   </div>
                 )}

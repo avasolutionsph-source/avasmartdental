@@ -22,20 +22,20 @@ const features = [
 
 export function Features() {
   return (
-    <section id="features" className="relative py-24 sm:py-28">
+    <section id="features" className="relative py-16 sm:py-24 lg:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="reveal text-4xl font-bold tracking-tight text-fg sm:text-5xl">
+          <h2 className="reveal text-3xl font-bold leading-[1.1] tracking-tight text-fg sm:text-4xl lg:text-5xl">
             Everything a clinic needs.
             <br />
             <span className="text-brand-600">Nothing it doesn't.</span>
           </h2>
-          <p className="reveal mt-4 text-lg text-fg-muted">
+          <p className="reveal mt-4 text-base text-fg-muted sm:text-lg">
             Eight modules. One quiet workspace. No upsells, no per-feature gates.
           </p>
         </div>
 
-        <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-3 sm:mt-14 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((f) => {
             const Icon = f.icon;
             return (
