@@ -28,9 +28,15 @@ export const stagger = (delayChildren = 0, staggerChildren = 0.08): Variants => 
   },
 });
 
-/** Use with `whileInView` so the animation triggers once per page load. */
+/**
+ * Use with `whileInView` so the animation triggers once per page load.
+ * `amount: "some"` fires as soon as ANY pixel of the element is visible.
+ * Generous bottom margin pre-triggers elements while they're still below the fold,
+ * ensuring they're already visible by the time the user scrolls to them
+ * (much more robust than `amount: 0.18` on Safari + large desktops).
+ */
 export const inViewProps = {
   initial: "hidden" as const,
   whileInView: "visible" as const,
-  viewport: { once: true, amount: 0.18 },
+  viewport: { once: true, amount: "some" as const, margin: "0px 0px 200px 0px" },
 };
