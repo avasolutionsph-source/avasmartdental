@@ -43,11 +43,36 @@ Two repos make up Ava Smart Dental:
   Workbox in autoUpdate mode, icons from `public/logo-mark.png`.
 - `src/lib/usePwaInstall.ts` hook captures `beforeinstallprompt`,
   detects iOS, watches `appinstalled`, and exposes a single
-  `promptInstall()` function.
+  `promptInstall()` function. When `VITE_APP_URL` is set to a different
+  origin, the hook flips to a `redirect` status and `promptInstall()`
+  sends the user to the clinic-app PWA to install there instead — so
+  "Install Ava" on the landing site installs the actual product, not
+  the marketing site.
 - `DownloadsPage` "Install Ava" button is real now — fires the native
   install dialog on Chrome/Edge/Android, shows a 3-step Share→Add-to-Home
-  walkthrough on iOS, falls back to a Bookmark hint elsewhere, and
+  walkthrough on iOS, falls back to a Bookmark hint elsewhere, redirects
+  to the clinic-app PWA when `VITE_APP_URL` points off-origin, and
   collapses to "Already installed" once installed.
+
+### Performance
+- Route-level code splitting via `React.lazy` in `main.tsx` — only
+  `HomePage` ships in the initial bundle; `PricingPage`, `FAQPage`,
+  `DownloadsPage`, `CheckoutPage`, `CheckoutSuccessPage` are split into
+  separate chunks loaded behind a `<Suspense>` spinner. Main chunk is
+  now under the Vite 500kB warning threshold.
+
+### Supabase schema (committed in `supabase/migrations/`)
+- `0001_clinics.sql` — `public.clinics` table (owner_user_id FK to
+  `auth.users`, plan, trial_end, subscription_status with check
+  constraint), index on owner_user_id, RLS with read + update policies
+  scoped to `auth.uid()`, and a `set_updated_at` trigger.
+- `0002_handle_new_user.sql` — `SECURITY DEFINER` function fired on
+  `auth.users` insert. Reads `raw_user_meta_data` written by
+  `signupClinic()` and inserts the matching `clinics` row. Silently
+  skips users without clinic metadata (so admin-created users don't
+  break), idempotent via `ON CONFLICT`.
+- See `supabase/README.md` for how to apply (Dashboard SQL Editor or
+  `supabase db push`).
 
 ### Env vars (Netlify → Environment variables)
 - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` — optional; without them

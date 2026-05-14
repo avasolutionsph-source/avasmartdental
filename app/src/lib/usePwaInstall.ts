@@ -7,7 +7,13 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 };
 
-export type InstallStatus = "loading" | "ready" | "ios" | "installed" | "unsupported";
+export type InstallStatus =
+  | "loading"
+  | "ready"
+  | "ios"
+  | "installed"
+  | "unsupported"
+  | "redirect";
 
 function isIos(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -35,14 +41,37 @@ function isStandalone(): boolean {
   );
 }
 
+// If the clinic-app PWA lives on a different origin (configured via
+// VITE_APP_URL), the install button on the landing site should send users
+// there instead of trying to install the landing site itself.
+function getClinicAppUrl(): string | null {
+  const raw = import.meta.env.VITE_APP_URL as string | undefined;
+  if (!raw) return null;
+  try {
+    const target = new URL(raw);
+    if (typeof window === "undefined") return target.toString();
+    const here = new URL(window.location.href);
+    if (target.origin === here.origin) return null;
+    return target.toString();
+  } catch {
+    return null;
+  }
+}
+
 export function usePwaInstall() {
   const [status, setStatus] = useState<InstallStatus>("loading");
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
+  const clinicAppUrl = getClinicAppUrl();
 
   useEffect(() => {
     if (isStandalone()) {
       setStatus("installed");
+      return;
+    }
+
+    if (clinicAppUrl) {
+      setStatus("redirect");
       return;
     }
 
@@ -75,9 +104,13 @@ export function usePwaInstall() {
       window.removeEventListener("appinstalled", onInstalled);
       window.clearTimeout(t);
     };
-  }, []);
+  }, [clinicAppUrl]);
 
   const promptInstall = useCallback(async () => {
+    if (clinicAppUrl) {
+      window.location.assign(clinicAppUrl);
+      return { outcome: "redirected" as const };
+    }
     if (!deferredPrompt) return { outcome: "dismissed" as const };
     await deferredPrompt.prompt();
     const result = await deferredPrompt.userChoice;
@@ -86,7 +119,7 @@ export function usePwaInstall() {
       setStatus("installed");
     }
     return result;
-  }, [deferredPrompt]);
+  }, [deferredPrompt, clinicAppUrl]);
 
-  return { status, promptInstall };
+  return { status, promptInstall, clinicAppUrl };
 }

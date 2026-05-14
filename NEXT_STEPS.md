@@ -31,12 +31,13 @@ Without it, the install + login UX has nowhere to land.
       `app.avasmartdental.ph` at the clinic Netlify; the bare apex/`www`
       at the landing Netlify.
 
-After this the install button on `/downloads` of the landing site lets
-the user install **either** site. We should decide which one is "the
-app" — likely the clinic app, in which case `/downloads` should link to
-the clinic app URL (the code already supports it via `VITE_APP_URL`,
-but the current Downloads page directly fires its own install prompt
-for the landing site). Pick one direction and commit to it.
+After this, the install button on `/downloads` will correctly send
+users to the clinic-app PWA to install: `usePwaInstall` now detects
+when `VITE_APP_URL` points to a different origin and redirects there
+instead of firing the landing-site install prompt. **Decision is
+committed: clinic app is "the app."** When `VITE_APP_URL` is unset
+(local dev), it falls back to installing the landing site so previews
+still work.
 
 ## 2. Supabase configuration
 
@@ -46,29 +47,11 @@ for the landing site). Pick one direction and commit to it.
 - [ ] Authentication → Providers → Email → decide whether **"Confirm
       email"** stays on. Default ON is safer; turn OFF only for early
       testing.
-- [ ] Add a **`clinics` table** (or columns on `auth.users` via a
-      trigger) so the signup metadata persists in a real row, not just
-      `raw_user_meta_data`. Sample shape:
-
-  ```sql
-  create table public.clinics (
-    id uuid primary key default gen_random_uuid(),
-    owner_user_id uuid not null references auth.users on delete cascade,
-    name text not null,
-    contact_name text,
-    phone text,
-    plan text not null,
-    trial_end timestamptz not null,
-    subscription_status text not null default 'trialing',
-    created_at timestamptz default now()
-  );
-  alter table public.clinics enable row level security;
-  create policy "owners read own clinic" on public.clinics
-    for select using (auth.uid() = owner_user_id);
-  ```
-
-  Then add a `handle_new_user` trigger or a Supabase Edge Function that
-  reads `raw_user_meta_data` and inserts a `clinics` row on signup.
+- [x] **DONE** — `clinics` table + `handle_new_user` trigger are
+      committed in `supabase/migrations/0001_clinics.sql` and
+      `0002_handle_new_user.sql`. Apply them once via the Supabase
+      Dashboard SQL Editor (or `supabase db push`); see
+      `supabase/README.md`.
 
 - [ ] RLS on every existing table (`patients`, `appointments`, etc.) so
       a logged-in user only sees their own clinic's data. The current
@@ -127,10 +110,11 @@ The Clinic plan says "Up to 5 dentists" and Multi-branch says
 
 ## 7. Quality / polish
 
-- [ ] Bundle sizes are flagged by Vite (>500kB main chunk on both
-      apps). Code-split with `React.lazy` on the heaviest routes
-      (`ReportsPage`, `PatientProfilePage` are the biggest in the
-      clinic app).
+- [x] **DONE for the landing site** — routes are lazy-loaded via
+      `React.lazy` in `app/src/main.tsx`. Main chunk is now ~358kB
+      gzipped 110kB, well under the warning threshold. **Still TODO
+      on the clinic app** (`ReportsPage`, `PatientProfilePage` are the
+      biggest there).
 - [ ] No tests anywhere yet. Start with the checkout validation
       (`PaymentForm` luhn / expiry, `AccountForm` password rules) and
       the auth gate behavior.

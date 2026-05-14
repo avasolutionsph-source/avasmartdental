@@ -40,7 +40,9 @@ export default function DownloadsPage() {
         ? "Add to Home Screen"
         : status === "unsupported"
           ? "Install in this browser"
-          : "Install Ava";
+          : status === "redirect"
+            ? "Open the Ava app"
+            : "Install Ava";
 
   const buttonHint =
     status === "installed"
@@ -49,9 +51,11 @@ export default function DownloadsPage() {
         ? "Tap Share, then Add to Home Screen — instructions below."
         : status === "unsupported"
           ? "Use Chrome, Edge, or Android Chrome to install. Otherwise, bookmark this page."
-          : status === "loading"
-            ? "Detecting your device…"
-            : "Tap Install when your browser asks.";
+          : status === "redirect"
+            ? "We'll take you to the Ava app where you can install it on this device."
+            : status === "loading"
+              ? "Detecting your device…"
+              : "Tap Install when your browser asks.";
 
   const showIosTip = status === "ios";
   const buttonDisabled = status === "loading" || status === "installed";
