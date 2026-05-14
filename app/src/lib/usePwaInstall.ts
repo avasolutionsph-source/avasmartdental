@@ -44,17 +44,22 @@ function isStandalone(): boolean {
 // If the clinic-app PWA lives on a different origin (configured via
 // VITE_APP_URL), the install button on the landing site should send users
 // there instead of trying to install the landing site itself.
+// Build-time constant + window.location.origin doesn't change in an SPA
+// session, so compute once and cache.
+let cachedClinicAppUrl: string | null | undefined;
 function getClinicAppUrl(): string | null {
+  if (cachedClinicAppUrl !== undefined) return cachedClinicAppUrl;
   const raw = import.meta.env.VITE_APP_URL as string | undefined;
-  if (!raw) return null;
+  if (!raw) return (cachedClinicAppUrl = null);
   try {
     const target = new URL(raw);
-    if (typeof window === "undefined") return target.toString();
+    if (typeof window === "undefined")
+      return (cachedClinicAppUrl = target.toString());
     const here = new URL(window.location.href);
-    if (target.origin === here.origin) return null;
-    return target.toString();
+    if (target.origin === here.origin) return (cachedClinicAppUrl = null);
+    return (cachedClinicAppUrl = target.toString());
   } catch {
-    return null;
+    return (cachedClinicAppUrl = null);
   }
 }
 
@@ -121,5 +126,5 @@ export function usePwaInstall() {
     return result;
   }, [deferredPrompt, clinicAppUrl]);
 
-  return { status, promptInstall, clinicAppUrl };
+  return { status, promptInstall };
 }

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Nav } from "../sections/Nav";
 import { Footer } from "../sections/Footer";
-import { usePwaInstall } from "../lib/usePwaInstall";
+import { usePwaInstall, type InstallStatus } from "../lib/usePwaInstall";
 
 const platforms = [
   { icon: Monitor, label: "Windows · macOS · ChromeOS · Linux" },
@@ -25,6 +25,26 @@ const platforms = [
 
 const delays = ["fade-in-d1", "fade-in-d2", "fade-in-d3", "fade-in-d4"];
 
+const BUTTON_LABELS: Record<InstallStatus, string> = {
+  loading: "Install Ava",
+  ready: "Install Ava",
+  ios: "Add to Home Screen",
+  unsupported: "Install in this browser",
+  installed: "Already installed",
+  redirect: "Open the Ava app",
+};
+
+const BUTTON_HINTS: Record<InstallStatus, string> = {
+  loading: "Detecting your device…",
+  ready: "Tap Install when your browser asks.",
+  ios: "Tap Share, then Add to Home Screen — instructions below.",
+  unsupported:
+    "Use Chrome, Edge, or Android Chrome to install. Otherwise, bookmark this page.",
+  installed: "Open Ava from your home screen or app launcher.",
+  redirect:
+    "We'll take you to the Ava app where you can install it on this device.",
+};
+
 export default function DownloadsPage() {
   const { status, promptInstall } = usePwaInstall();
 
@@ -33,30 +53,8 @@ export default function DownloadsPage() {
     document.title = "Download Ava — Ava Smart Dental";
   }, []);
 
-  const buttonLabel =
-    status === "installed"
-      ? "Already installed"
-      : status === "ios"
-        ? "Add to Home Screen"
-        : status === "unsupported"
-          ? "Install in this browser"
-          : status === "redirect"
-            ? "Open the Ava app"
-            : "Install Ava";
-
-  const buttonHint =
-    status === "installed"
-      ? "Open Ava from your home screen or app launcher."
-      : status === "ios"
-        ? "Tap Share, then Add to Home Screen — instructions below."
-        : status === "unsupported"
-          ? "Use Chrome, Edge, or Android Chrome to install. Otherwise, bookmark this page."
-          : status === "redirect"
-            ? "We'll take you to the Ava app where you can install it on this device."
-            : status === "loading"
-              ? "Detecting your device…"
-              : "Tap Install when your browser asks.";
-
+  const buttonLabel = BUTTON_LABELS[status];
+  const buttonHint = BUTTON_HINTS[status];
   const showIosTip = status === "ios";
   const buttonDisabled = status === "loading" || status === "installed";
 
