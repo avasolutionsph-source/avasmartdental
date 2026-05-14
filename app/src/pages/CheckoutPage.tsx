@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { Nav } from "../sections/Nav";
 import { Footer } from "../sections/Footer";
 import { useSpotlight } from "../lib/useSpotlight";
 import { getPlan } from "../lib/plans";
+import { signupClinic } from "../lib/supabase";
 import { StepIndicator } from "../components/checkout/StepIndicator";
 import { PlanSummary } from "../components/checkout/PlanSummary";
 import {
@@ -16,6 +17,7 @@ import {
   type PaymentData,
 } from "../components/checkout/PaymentForm";
 import { ReviewStep } from "../components/checkout/ReviewStep";
+import { BuildingAnimation } from "../components/checkout/BuildingAnimation";
 
 const steps = [
   { id: "account", label: "Account" },
@@ -37,6 +39,12 @@ const emptyPayment: PaymentData = {
   cvc: "",
 };
 
+function addDays(d: Date, n: number): Date {
+  const out = new Date(d);
+  out.setDate(out.getDate() + n);
+  return out;
+}
+
 export default function CheckoutPage() {
   useSpotlight();
   const [params] = useSearchParams();
@@ -47,14 +55,19 @@ export default function CheckoutPage() {
   const [account, setAccount] = useState<AccountData>(emptyAccount);
   const [payment, setPayment] = useState<PaymentData>(emptyPayment);
 
+  const [building, setBuilding] = useState(false);
+  const [signupError, setSignupError] = useState<string | null>(null);
+  const signupResult = useRef<{ simulated: boolean } | null>(null);
+
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = `Checkout — ${plan.name} plan · Ava Smart Dental`;
   }, [plan.name]);
 
   useEffect(() => {
+    if (building) return;
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [stepIdx]);
+  }, [stepIdx, building]);
 
   function handleAccountNext(data: AccountData) {
     setAccount(data);
@@ -67,13 +80,41 @@ export default function CheckoutPage() {
   }
 
   async function handleConfirm() {
-    // Frontend-only: simulate the NextPay tokenization + intent confirmation.
-    await new Promise((resolve) => setTimeout(resolve, 1100));
+    setSignupError(null);
+    setBuilding(true);
+
+    // Kick off the real signup call in parallel with the visual animation.
+    // The animation calls `onAnimationDone` when it finishes; we wait for
+    // both before navigating.
+    const trialEnd = addDays(new Date(), 14);
+    const result = await signupClinic({
+      email: account.email,
+      clinicName: account.clinicName,
+      contactName: account.contactName,
+      phone: account.phone,
+      plan: plan.id,
+      trialEndIso: trialEnd.toISOString(),
+    });
+
+    if (!result.ok) {
+      setBuilding(false);
+      setSignupError(result.reason);
+      return;
+    }
+    signupResult.current = { simulated: result.simulated };
+  }
+
+  function handleAnimationDone() {
+    // If signup is still in flight (shouldn't happen — Supabase signUp is
+    // usually <500ms and animation is ~3.3s), bail out and let the await
+    // above redirect when ready. In practice the result is always set.
+    if (!signupResult.current) return;
     navigate("/checkout/success", {
       state: {
         plan: plan.id,
         email: account.email,
         clinicName: account.clinicName,
+        simulated: signupResult.current.simulated,
       },
       replace: true,
     });
@@ -89,7 +130,12 @@ export default function CheckoutPage() {
         <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-8 sm:px-8 sm:pb-24 sm:pt-12">
           <Link
             to="/pricing"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-fg-muted transition-colors hover:text-fg"
+            className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
+              building
+                ? "pointer-events-none text-fg-faint"
+                : "text-fg-muted hover:text-fg"
+            }`}
+            aria-disabled={building}
           >
             <ChevronLeft className="h-4 w-4" />
             Back to pricing
@@ -114,29 +160,46 @@ export default function CheckoutPage() {
 
           <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px] lg:gap-8">
             <section
-              key={stepIdx}
+              key={building ? "building" : `step-${stepIdx}`}
               className="fade-in fade-in-d2 rounded-3xl border border-line bg-white p-6 shadow-clinical sm:p-8"
             >
-              {stepIdx === 0 && (
-                <AccountForm initial={account} onNext={handleAccountNext} />
-              )}
-              {stepIdx === 1 && (
-                <PaymentForm
-                  initial={payment}
-                  onBack={() => setStepIdx(0)}
-                  onNext={handlePaymentNext}
+              {building ? (
+                <BuildingAnimation
+                  active={building}
+                  onComplete={handleAnimationDone}
                 />
-              )}
-              {stepIdx === 2 && (
-                <ReviewStep
-                  plan={plan}
-                  account={account}
-                  payment={payment}
-                  onBack={() => setStepIdx(1)}
-                  onEditAccount={() => setStepIdx(0)}
-                  onEditPayment={() => setStepIdx(1)}
-                  onConfirm={handleConfirm}
-                />
+              ) : (
+                <>
+                  {signupError && (
+                    <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                      <strong className="font-semibold">
+                        Couldn't finish signup:
+                      </strong>{" "}
+                      {signupError}
+                    </div>
+                  )}
+                  {stepIdx === 0 && (
+                    <AccountForm initial={account} onNext={handleAccountNext} />
+                  )}
+                  {stepIdx === 1 && (
+                    <PaymentForm
+                      initial={payment}
+                      onBack={() => setStepIdx(0)}
+                      onNext={handlePaymentNext}
+                    />
+                  )}
+                  {stepIdx === 2 && (
+                    <ReviewStep
+                      plan={plan}
+                      account={account}
+                      payment={payment}
+                      onBack={() => setStepIdx(1)}
+                      onEditAccount={() => setStepIdx(0)}
+                      onEditPayment={() => setStepIdx(1)}
+                      onConfirm={handleConfirm}
+                    />
+                  )}
+                </>
               )}
             </section>
 

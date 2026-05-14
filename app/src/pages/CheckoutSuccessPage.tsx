@@ -10,6 +10,7 @@ type LocationState = {
   plan?: PlanId;
   email?: string;
   clinicName?: string;
+  simulated?: boolean;
 };
 
 function addDays(d: Date, n: number): Date {
@@ -69,10 +70,19 @@ export default function CheckoutSuccessPage() {
               .
             </h1>
             <p className="mx-auto mt-4 max-w-lg text-base text-fg-muted sm:text-lg">
-              Your {plan.name} trial is live. We've sent your workspace link and
-              receipt to{" "}
-              <span className="font-semibold text-fg-2">{state.email}</span>.
+              Your {plan.name} trial is live. We've sent a confirmation link
+              and receipt to{" "}
+              <span className="font-semibold text-fg-2">{state.email}</span> —
+              click it to set your password and open your workspace.
             </p>
+            {state.simulated && (
+              <p className="mx-auto mt-4 max-w-lg rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+                Demo mode: Supabase isn't configured yet, so no real email was
+                sent. Add <code className="font-mono">VITE_SUPABASE_URL</code>{" "}
+                and <code className="font-mono">VITE_SUPABASE_ANON_KEY</code>{" "}
+                to enable the live signup.
+              </p>
+            )}
           </div>
 
           <div className="fade-in fade-in-d2 mt-10 rounded-3xl border border-line bg-white p-6 shadow-clinical sm:p-8">
@@ -82,8 +92,8 @@ export default function CheckoutSuccessPage() {
             <ol className="mt-4 space-y-4">
               <Step
                 n={1}
-                title="Check your inbox"
-                body="We've emailed you a one-tap link to set your password and open your new clinic workspace."
+                title="Confirm your email"
+                body="We sent a confirmation link to your inbox. Click it to set your password and open your new clinic workspace."
               />
               <Step
                 n={2}
