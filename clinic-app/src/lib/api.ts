@@ -942,10 +942,11 @@ export async function deleteFile(fileId: number): Promise<void> {
 // ════════════════════════════════════════════════════════════════════
 
 export async function getClinicSettings(): Promise<ClinicSettings> {
+  // RLS scopes clinic_settings to the signed-in user's clinic, so the
+  // select returns at most one row and we don't need an explicit filter.
   const { data: settingsRow, error: sErr } = await supabase
     .from('clinic_settings')
     .select('*')
-    .eq('id', 1)
     .single();
   if (sErr) throw new Error(sErr.message);
 
@@ -990,10 +991,13 @@ export async function getClinicSettings(): Promise<ClinicSettings> {
 export async function updateClinicSettings(
   data: Partial<Omit<ClinicSettings, 'dentists' | 'services' | 'payment_terms'>>,
 ): Promise<void> {
+  // RLS scopes the update to the signed-in user's clinic_settings row.
+  // The `not.is.null` filter is just to satisfy Supabase's "no-filter
+  // update" guard; clinic_id is NOT NULL on every row by schema.
   const { error } = await supabase
     .from('clinic_settings')
     .update(data)
-    .eq('id', 1);
+    .not('clinic_id', 'is', null);
   if (error) throw new Error(error.message);
 }
 

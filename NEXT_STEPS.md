@@ -48,10 +48,12 @@ back to installing the landing site so previews still work.
       Dashboard SQL Editor (or `supabase db push`); see
       `supabase/README.md`.
 
-- [ ] RLS on every existing table (`patients`, `appointments`, etc.) so
-      a logged-in user only sees their own clinic's data. The current
-      mgv-app code assumes everything is accessible — without RLS, any
-      authenticated user reads everything.
+- [x] **DONE** — Multi-tenant RLS shipped in
+      `supabase/migrations/0003_multi_tenant.sql`. Adds `clinic_id` to
+      all 22 clinic-data tables with `default current_clinic_id()` and
+      tenant-scoped policies (select/insert/update/delete) on every
+      table. Auto-provisions per-clinic `clinic_settings` and default
+      `payment_terms` via `on_clinic_created` trigger.
 
 ## 3. Real NextPay integration
 

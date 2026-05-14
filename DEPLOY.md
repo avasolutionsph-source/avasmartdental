@@ -60,12 +60,20 @@ In Supabase Dashboard → SQL Editor, paste and run **in this order**:
 
 Skip whichever are already applied. Most projects already have these.
 
-**B. Landing-site signup layer (NEW — needs to be applied):**
-- `supabase/migrations/0001_clinics.sql`
-- `supabase/migrations/0002_handle_new_user.sql`
+**B. Landing-site signup + multi-tenant layer (NEW — needs to be applied):**
+- `supabase/migrations/0001_clinics.sql` — `clinics` table + RLS
+- `supabase/migrations/0002_handle_new_user.sql` — trigger that
+  creates a `clinics` row from checkout signup metadata
+- `supabase/migrations/0003_multi_tenant.sql` — adds `clinic_id` to
+  every clinic-data table, tenant-scoped RLS, auto-provisioning of
+  per-clinic settings/payment_terms
 
-After this, a checkout signup writes a row to `auth.users` AND triggers
-a `clinics` row insert via the trigger in 0002.
+⚠️ **Apply 0003 before letting more than one clinic sign up.** Without
+it, any signed-in user can read every clinic's patients, billing, etc.
+
+After this, a checkout signup creates: auth user → clinics row →
+clinic_settings row → default payment_terms — all atomically via
+triggers.
 
 ---
 

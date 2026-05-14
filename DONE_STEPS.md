@@ -74,6 +74,17 @@ See `DEPLOY.md` for the full Netlify + Supabase setup walkthrough.
   `signupClinic()` and inserts the matching `clinics` row. Silently
   skips users without clinic metadata (so admin-created users don't
   break), idempotent via `ON CONFLICT`.
+- `0003_multi_tenant.sql` — multi-tenant lockdown. Adds `clinic_id`
+  column (with `default current_clinic_id()` so inserts auto-scope)
+  and indexes to all 22 clinic-data tables (patients, dentists,
+  appointments, billing, treatments, invoices, payments, expenses,
+  prescriptions, drugs, services, file_assets, settings, etc.).
+  Replaces every wide-open `using (true)` policy with a tenant-scoped
+  `clinic_id = current_clinic_id()` policy on select/insert/update/
+  delete. Drops the legacy `clinic_settings.id = 1` single-row check;
+  adds `on_clinic_created` trigger that auto-provisions per-clinic
+  `clinic_settings` and default `payment_terms` whenever a `clinics`
+  row is inserted.
 - See `supabase/README.md` for how to apply (Dashboard SQL Editor or
   `supabase db push`).
 
