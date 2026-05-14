@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Field, TextInput } from "./fields";
 
 export type AccountData = {
@@ -7,6 +7,7 @@ export type AccountData = {
   contactName: string;
   email: string;
   phone: string;
+  password: string;
 };
 
 type Errors = Partial<Record<keyof AccountData, string>>;
@@ -21,6 +22,8 @@ function validate(data: AccountData): Errors {
   const phoneDigits = data.phone.replace(/\D/g, "");
   if (!phoneDigits) errs.phone = "Required";
   else if (phoneDigits.length < 10) errs.phone = "Too short";
+  if (!data.password) errs.password = "Required";
+  else if (data.password.length < 8) errs.password = "At least 8 characters";
   return errs;
 }
 
@@ -32,6 +35,7 @@ type Props = {
 export function AccountForm({ initial, onNext }: Props) {
   const [data, setData] = useState<AccountData>(initial);
   const [errors, setErrors] = useState<Errors>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   function update<K extends keyof AccountData>(key: K, value: AccountData[K]) {
     setData((d) => ({ ...d, [key]: value }));
@@ -107,6 +111,36 @@ export function AccountForm({ initial, onNext }: Props) {
           onChange={(e) => update("email", e.target.value)}
           invalid={!!errors.email}
         />
+      </Field>
+
+      <Field
+        label="Password"
+        hint="Use this to log into the app — min 8 chars"
+        error={errors.password}
+      >
+        <div className="relative">
+          <TextInput
+            type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
+            placeholder="Pick a strong password"
+            value={data.password}
+            onChange={(e) => update("password", e.target.value)}
+            invalid={!!errors.password}
+            className="pr-11"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((s) => !s)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-faint hover:text-fg-2"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </button>
+        </div>
       </Field>
 
       <div className="flex justify-end pt-2">

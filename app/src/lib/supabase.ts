@@ -17,18 +17,9 @@ export const appRedirectUrl =
     ? `${window.location.origin}/checkout/success`
     : undefined);
 
-function generatePassword(length = 24): string {
-  const bytes = new Uint8Array(length);
-  crypto.getRandomValues(bytes);
-  const chars =
-    "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
-  let out = "";
-  for (const b of bytes) out += chars[b % chars.length];
-  return out;
-}
-
 export type SignupPayload = {
   email: string;
+  password: string;
   clinicName: string;
   contactName: string;
   phone: string;
@@ -50,7 +41,7 @@ export async function signupClinic(
 
   const { error } = await supabase.auth.signUp({
     email: payload.email,
-    password: generatePassword(),
+    password: payload.password,
     options: {
       emailRedirectTo: appRedirectUrl,
       data: {

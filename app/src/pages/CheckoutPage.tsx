@@ -30,6 +30,7 @@ const emptyAccount: AccountData = {
   contactName: "",
   email: "",
   phone: "",
+  password: "",
 };
 
 const emptyPayment: PaymentData = {
@@ -89,6 +90,7 @@ export default function CheckoutPage() {
     const trialEnd = addDays(new Date(), 14);
     const result = await signupClinic({
       email: account.email,
+      password: account.password,
       clinicName: account.clinicName,
       contactName: account.contactName,
       phone: account.phone,
