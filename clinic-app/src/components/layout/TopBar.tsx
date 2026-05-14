@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Search, Bell, ChevronDown, User, Menu } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Search, Bell, ChevronDown, User, Menu, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
 import { fetchNotifications } from '@/lib/api';
 import type { NotificationItem } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 
 // ─── Page title map ───────────────────────────────────────────────
 const pageTitles: Record<string, string> = {
@@ -25,9 +26,28 @@ function getPageTitle(pathname: string): string {
 // ─── TopBar Component ─────────────────────────────────────────────
 export function TopBar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut, user } = useAuth();
   const setSearchOpen = useAppStore((s) => s.setSearchOpen);
   const currentUser = useAppStore((s) => s.currentUser);
   const toggleMobileMenu = useAppStore((s) => s.toggleMobileMenu);
+
+  const displayName = currentUser?.name ?? user?.email ?? 'User';
+  const initials =
+    currentUser?.name
+      ?.split(' ')
+      .map((n) => n[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() ??
+    user?.email?.[0]?.toUpperCase() ??
+    'U';
+
+  async function handleSignOut() {
+    setUserMenuOpen(false);
+    await signOut();
+    navigate('/login', { replace: true });
+  }
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -169,15 +189,10 @@ export function TopBar() {
           >
             {/* Avatar */}
             <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center text-white text-sm font-semibold">
-              {currentUser?.name
-                .split(' ')
-                .map((n) => n[0])
-                .join('')
-                .slice(0, 2)
-                .toUpperCase() || 'U'}
+              {initials}
             </div>
             <span className="hidden lg:inline text-sm font-medium text-gray-700 max-w-[120px] truncate">
-              {currentUser?.name || 'User'}
+              {displayName}
             </span>
             <ChevronDown className="h-4 w-4 text-gray-400 hidden lg:block" />
           </button>
@@ -186,11 +201,28 @@ export function TopBar() {
           {userMenuOpen && (
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
               <div className="px-4 py-2 border-b border-gray-100">
-                <p className="text-sm font-semibold text-gray-900">{currentUser?.name || 'Ava Smart Dental'}</p>
+                <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+                {user?.email && currentUser?.name && (
+                  <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                )}
               </div>
-              <button className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors">
+              <button
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  navigate('/settings');
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              >
                 <User className="h-4 w-4" />
                 Profile
+              </button>
+              <div className="my-1 border-t border-gray-100" />
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign out
               </button>
             </div>
           )}

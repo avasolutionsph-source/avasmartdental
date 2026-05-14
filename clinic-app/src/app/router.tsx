@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/lib/auth';
 import LoginPage from '@/features/auth/LoginPage';
+import ResetPasswordPage from '@/features/auth/ResetPasswordPage';
 
 // ─── Loading Fallback ─────────────────────────────────────────────
 function PageLoader() {
@@ -52,6 +53,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/reset-password',
+    element: <ResetPasswordPage />,
   },
   {
     path: '/',
