@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { registerSW } from "virtual:pwa-register";
 import "./index.css";
 import HomePage from "./pages/HomePage";
 import PricingPage from "./pages/PricingPage";
@@ -8,6 +9,8 @@ import FAQPage from "./pages/FAQPage";
 import DownloadsPage from "./pages/DownloadsPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import CheckoutSuccessPage from "./pages/CheckoutSuccessPage";
+
+registerSW({ immediate: true });
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

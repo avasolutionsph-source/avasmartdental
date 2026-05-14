@@ -8,11 +8,13 @@ import {
   Zap,
   Wifi,
   ShieldCheck,
-  ArrowRight,
   Check,
+  Share,
+  PlusSquare,
 } from "lucide-react";
 import { Nav } from "../sections/Nav";
 import { Footer } from "../sections/Footer";
+import { usePwaInstall } from "../lib/usePwaInstall";
 
 const platforms = [
   { icon: Monitor, label: "Windows · macOS · ChromeOS · Linux" },
@@ -23,15 +25,36 @@ const platforms = [
 
 const delays = ["fade-in-d1", "fade-in-d2", "fade-in-d3", "fade-in-d4"];
 
-const APP_URL =
-  (import.meta.env.VITE_APP_URL as string | undefined) ??
-  "https://app.avasmartdental.ph";
-
 export default function DownloadsPage() {
+  const { status, promptInstall } = usePwaInstall();
+
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = "Download Ava — Ava Smart Dental";
   }, []);
+
+  const buttonLabel =
+    status === "installed"
+      ? "Already installed"
+      : status === "ios"
+        ? "Add to Home Screen"
+        : status === "unsupported"
+          ? "Install in this browser"
+          : "Install Ava";
+
+  const buttonHint =
+    status === "installed"
+      ? "Open Ava from your home screen or app launcher."
+      : status === "ios"
+        ? "Tap Share, then Add to Home Screen — instructions below."
+        : status === "unsupported"
+          ? "Use Chrome, Edge, or Android Chrome to install. Otherwise, bookmark this page."
+          : status === "loading"
+            ? "Detecting your device…"
+            : "Tap Install when your browser asks.";
+
+  const showIosTip = status === "ios";
+  const buttonDisabled = status === "loading" || status === "installed";
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-bg text-fg">
@@ -62,19 +85,48 @@ export default function DownloadsPage() {
 
             {/* The single big install button */}
             <div className="fade-in fade-in-d3 mt-10 flex flex-col items-center">
-              <a
-                href={APP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group shimmer-sweep inline-flex items-center gap-3 rounded-full bg-brand-600 px-8 py-4 text-[16px] font-bold text-white shadow-glow-brand transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-700 sm:px-10 sm:py-5 sm:text-[17px]"
+              <button
+                type="button"
+                onClick={promptInstall}
+                disabled={buttonDisabled}
+                className="group shimmer-sweep inline-flex items-center gap-3 rounded-full bg-brand-600 px-8 py-4 text-[16px] font-bold text-white shadow-glow-brand transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 sm:px-10 sm:py-5 sm:text-[17px]"
               >
                 <Download className="h-5 w-5" />
-                Install Ava
-                <ArrowRight className="arrow-nudge h-5 w-5" />
-              </a>
-              <p className="mt-3 text-xs text-fg-subtle">
-                Opens the app — tap Install when your browser prompts you.
-              </p>
+                {buttonLabel}
+              </button>
+              <p className="mt-3 text-xs text-fg-subtle">{buttonHint}</p>
+
+              {showIosTip && (
+                <div className="mt-6 max-w-md rounded-2xl border border-brand-200 bg-white p-4 text-left text-sm shadow-clinical">
+                  <p className="font-semibold text-fg">On iPhone / iPad:</p>
+                  <ol className="mt-2 space-y-1.5 text-fg-2">
+                    <li className="flex items-start gap-2">
+                      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[10px] font-bold text-brand-700">
+                        1
+                      </span>
+                      <span>
+                        Tap the <Share className="inline h-3.5 w-3.5" /> Share
+                        button in Safari.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[10px] font-bold text-brand-700">
+                        2
+                      </span>
+                      <span>
+                        Pick <PlusSquare className="inline h-3.5 w-3.5" /> Add
+                        to Home Screen.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[10px] font-bold text-brand-700">
+                        3
+                      </span>
+                      <span>Tap Add — Ava opens like a native app.</span>
+                    </li>
+                  </ol>
+                </div>
+              )}
             </div>
 
             {/* Compatibility row — icons only, no buttons */}
@@ -198,17 +250,8 @@ export default function DownloadsPage() {
             </div>
 
             <p className="fade-in fade-in-d6 mt-8 text-center text-xs text-fg-subtle">
-              Ava lives at{" "}
-              <a
-                href={APP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-brand-600 hover:underline"
-              >
-                {APP_URL.replace(/^https?:\/\//, "")}
-              </a>
-              . Visit it once, install it, and it opens like a native app from
-              then on.
+              Already installed? Open Ava from your home screen or Applications
+              folder — it launches like a native app.
             </p>
           </div>
         </section>
