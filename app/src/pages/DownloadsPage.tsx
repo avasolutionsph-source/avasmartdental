@@ -23,9 +23,9 @@ const platforms = [
 
 const delays = ["fade-in-d1", "fade-in-d2", "fade-in-d3", "fade-in-d4"];
 
-function handleInstall() {
-  alert("Coming soon! Once the PWA build ships, this button will install Ava on whatever device you're using.");
-}
+const APP_URL =
+  (import.meta.env.VITE_APP_URL as string | undefined) ??
+  "https://app.avasmartdental.ph";
 
 export default function DownloadsPage() {
   useEffect(() => {
@@ -62,17 +62,18 @@ export default function DownloadsPage() {
 
             {/* The single big install button */}
             <div className="fade-in fade-in-d3 mt-10 flex flex-col items-center">
-              <button
-                type="button"
-                onClick={handleInstall}
+              <a
+                href={APP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group shimmer-sweep inline-flex items-center gap-3 rounded-full bg-brand-600 px-8 py-4 text-[16px] font-bold text-white shadow-glow-brand transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-700 sm:px-10 sm:py-5 sm:text-[17px]"
               >
                 <Download className="h-5 w-5" />
                 Install Ava
                 <ArrowRight className="arrow-nudge h-5 w-5" />
-              </button>
+              </a>
               <p className="mt-3 text-xs text-fg-subtle">
-                Free 14-day trial · No credit card · Cancel anytime
+                Opens the app — tap Install when your browser prompts you.
               </p>
             </div>
 
@@ -197,12 +198,17 @@ export default function DownloadsPage() {
             </div>
 
             <p className="fade-in fade-in-d6 mt-8 text-center text-xs text-fg-subtle">
-              Downloads are coming soon. Sa ngayon, you can use Ava in any
-              modern browser at{" "}
-              <span className="font-semibold text-fg-2">
-                app.avasmartdental.ph
-              </span>
-              .
+              Ava lives at{" "}
+              <a
+                href={APP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-brand-600 hover:underline"
+              >
+                {APP_URL.replace(/^https?:\/\//, "")}
+              </a>
+              . Visit it once, install it, and it opens like a native app from
+              then on.
             </p>
           </div>
         </section>
