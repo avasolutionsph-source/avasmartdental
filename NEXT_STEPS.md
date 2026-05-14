@@ -7,37 +7,32 @@ shipped surface this builds on.
 
 ## 1. Stand up the clinic-app deployment (blocks the whole flow)
 
-Right now `Smart-Dental` repo has the PWA wired but isn't deployed.
-Without it, the install + login UX has nowhere to land.
+**Status:** clinic-app source code is now in `clinic-app/` of this
+monorepo. Both apps share one repo. What's left is Netlify config.
 
-- [ ] In Netlify, **Add new site → Import from GitHub →
-      `avasolutionsph-source/Smart-Dental`** (separate site from the
-      landing one).
-  - Build command + publish dir auto-detect from the repo's
-    `netlify.toml` (already shipped).
-- [ ] Set env vars on **both** Netlify projects to the **same Supabase
-      project** — that's how a checkout signup becomes a login on the
-      clinic app:
+See `DEPLOY.md` for the full step-by-step. Quick checklist:
+
+- [ ] Reconfigure (or recreate) the Netlify site serving
+      `smartdentalapp.avasolutions.ph`:
+  - Repository: `avasolutionsph-source/avasmartdental` (yes, same repo
+    as landing — monorepo now)
+  - **Base directory: `clinic-app/`** ← this is what makes Netlify
+    build the right app
+  - Branch: `main`
+- [ ] Set env vars on both Netlify sites to the **same Supabase**
+      project:
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
-- [ ] On the **landing** Netlify, also set:
-  - `VITE_APP_URL` = the clinic app's Netlify URL (e.g.
-    `https://ava-clinic.netlify.app`)
-  - `VITE_APP_REDIRECT_URL` = same URL (this is where Supabase's
-    "confirm your email" link sends users)
-- [ ] Optional: rename the Netlify site (Site settings → Change site
-      name) to `ava-clinic-app` or similar.
-- [ ] Optional but recommended: point a custom subdomain
-      `app.avasmartdental.ph` at the clinic Netlify; the bare apex/`www`
-      at the landing Netlify.
+- [ ] On the landing Netlify, also set:
+  - `VITE_APP_URL` = `https://smartdentalapp.avasolutions.ph`
+  - `VITE_APP_REDIRECT_URL` = `https://smartdentalapp.avasolutions.ph/login`
 
-After this, the install button on `/downloads` will correctly send
-users to the clinic-app PWA to install: `usePwaInstall` now detects
-when `VITE_APP_URL` points to a different origin and redirects there
-instead of firing the landing-site install prompt. **Decision is
-committed: clinic app is "the app."** When `VITE_APP_URL` is unset
-(local dev), it falls back to installing the landing site so previews
-still work.
+After this, the install button on `/downloads` will correctly redirect
+to the clinic-app PWA: `usePwaInstall` detects when `VITE_APP_URL`
+points to a different origin and redirects there instead of firing
+the landing-site install prompt. **Decision is committed: clinic app
+is "the app."** When `VITE_APP_URL` is unset (local dev), it falls
+back to installing the landing site so previews still work.
 
 ## 2. Supabase configuration
 
@@ -122,14 +117,21 @@ The Clinic plan says "Up to 5 dentists" and Multi-branch says
 - [ ] Replace the placeholder `123 Dental Avenue, Makati City` text in
       receipts with clinic-configurable address from the `clinics` row.
 
-## 8. Once the original mgv-app folder is no longer the source of truth
+## 8. Pick ONE Supabase project for both apps
 
-`/Users/kennmhenard/Desktop/AvaSmartDental/mgv-app/` is a sanitized
-clone with no `.git`. `~/Desktop/mgv/Smart-Dental/` is the canonical
-working tree (has the GitHub remote). Currently any change to the
-clinic app means editing both, then syncing. Once you trust the
-sanitized copy is what you want, delete the original and re-clone from
-the remote into the sanitized location.
+The clinic app (`Smart-Dental` history) already has its own Supabase
+with the full data schema (patients, appointments, billing, etc.). The
+landing site was set up earlier with a fresh Supabase project
+(`ehirqsqkfnjuuvzthsrx`). **For end-to-end signup → login to work,
+both apps MUST point at the same Supabase.**
+
+Recommendation: use the clinic app's existing Supabase. Update the
+landing site's `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` Netlify
+env vars to match the clinic app's. Then apply
+`supabase/migrations/0001_clinics.sql` and `0002_handle_new_user.sql`
+to that Supabase (adds the `clinics` table + signup trigger).
+
+See `DEPLOY.md` step 1 + 2 for details.
 
 ---
 

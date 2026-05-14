@@ -1,11 +1,14 @@
 # Done — what's already shipped
 
-Two repos make up Ava Smart Dental:
+**Monorepo:** both apps now live in this single `avasmartdental` repo.
 
-- **Landing site / checkout** — this repo (`avasolutionsph-source/avasmartdental`).
-  React + Vite + Tailwind, deployed on Netlify at `sage-cassata-3c02a4.netlify.app`.
-- **Clinic app (PWA)** — sibling repo (`avasolutionsph-source/Smart-Dental`).
-  React + Vite + Tailwind + Supabase, not deployed yet at time of writing.
+- **Landing site / checkout** — `app/` subfolder.
+  React + Vite + Tailwind, deployed on Netlify at `smartdental.avasolutions.ph`.
+- **Clinic app (PWA)** — `clinic-app/` subfolder (cloned from the
+  now-archived `Smart-Dental` repo).
+  React + Vite + Tailwind v4 + Supabase, target: `smartdentalapp.avasolutions.ph`.
+
+See `DEPLOY.md` for the full Netlify + Supabase setup walkthrough.
 
 ---
 
@@ -83,12 +86,18 @@ Two repos make up Ava Smart Dental:
 
 ---
 
-## Clinic app — `mgv-app/` (sanitized clone) → pushed to `Smart-Dental` repo
+## Clinic app — `clinic-app/` (merged into this repo)
 
-### Sanitization
-- Cloned from `~/Desktop/mgv/Smart-Dental` into `mgv-app/`. Confirmed
-  zero hardcoded credentials — everything reads from env. Added a
-  `.env.example` template.
+### Merge
+- The `Smart-Dental` GitHub repo has been cloned into `clinic-app/` and
+  its `.git` removed, so the clinic app source now lives in this same
+  `avasmartdental` repo. One repo, two Vite projects, one shared
+  Supabase. The `Smart-Dental` remote is no longer the source of truth.
+- Vite config patched (`clinic-app/vite.config.ts`) with explicit empty
+  `css.postcss` config so Vite doesn't walk up the FS tree and pick up a
+  stray `~/postcss.config.js` (which was breaking the build on Windows).
+- Inner `DONE_STEPS.md` / `NEXT_STEPS.md` deleted — top-level versions
+  are canonical.
 
 ### PWA setup
 - `vite-plugin-pwa` with full manifest (`name: Ava Smart Dental`,
@@ -122,7 +131,7 @@ Two repos make up Ava Smart Dental:
 
 ---
 
-## Cross-repo end-to-end flow (works once both Netlifies are configured)
+## End-to-end flow (works once both Netlify sites + shared Supabase are configured)
 
 1. User picks a plan on `/pricing` (landing).
 2. Fills checkout, including a password. Confirms.
