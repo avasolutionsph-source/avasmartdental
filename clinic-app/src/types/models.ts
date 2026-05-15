@@ -309,6 +309,18 @@ export type ClinicSettings = {
   payment_terms: PaymentTermOption[];
 };
 
+// ─── Clinic / Subscription (from public.clinics) ──────────────────
+// Mirrors the row written by the landing-site signup trigger; used by
+// the Settings → Billing section.
+export type ClinicBilling = {
+  id: string;
+  name: string;
+  plan: 'solo' | 'clinic' | 'multibranch' | string;
+  trial_end: string;
+  subscription_status: 'trialing' | 'active' | 'past_due' | 'canceled';
+  created_at: string;
+};
+
 // ─── Notification ──────────────────────────────────────────────────
 export type Notification = {
   id: number;

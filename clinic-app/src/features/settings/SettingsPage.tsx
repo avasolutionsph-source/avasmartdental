@@ -3,7 +3,7 @@ import {
   Building2, Stethoscope, Wrench, CreditCard, Pill,
   Plus, Pencil, Loader2, Save, Upload, ToggleLeft, ToggleRight, Trash2,
 } from 'lucide-react';
-import type { Dentist, ServiceItem, PaymentTermOption, ClinicSettings, Drug } from '@/types/models';
+import type { Dentist, ServiceItem, PaymentTermOption, ClinicSettings, ClinicBilling, Drug } from '@/types/models';
 import { api } from '@/lib/api';
 import { formatMoney, cn } from '@/lib/utils';
 import {
@@ -44,6 +44,7 @@ export default function SettingsPage() {
 
   // Data state
   const [clinic, setClinic] = useState<ClinicSettings | null>(null);
+  const [billing, setBilling] = useState<ClinicBilling | null>(null);
   const [dentists, setDentists] = useState<Dentist[]>([]);
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [paymentTerms, setPaymentTerms] = useState<PaymentTermOption[]>([]);
@@ -112,15 +113,19 @@ export default function SettingsPage() {
     let cancelled = false;
     async function load() {
       try {
-        const [c, d, s, pt, dr] = await Promise.all([
+        const [c, d, s, pt, dr, b] = await Promise.all([
           api.getClinicSettings(),
           api.getDentists(),
           api.getServices(),
           api.getPaymentTerms(),
           api.getDrugs(),
+          // Tolerate missing clinics row (e.g. admin-created user) — Billing
+          // tab will show an empty state instead of failing the whole page.
+          api.getClinicBilling().catch(() => null),
         ]);
         if (!cancelled) {
           setClinic(c);
+          setBilling(b);
           setDentists(d);
           setServices(s);
           setPaymentTerms(pt);
@@ -411,6 +416,7 @@ export default function SettingsPage() {
     { key: 'services', label: 'Services', count: services.length },
     { key: 'terms', label: 'Payment Terms', count: paymentTerms.length },
     { key: 'drugs', label: 'Drug List', count: drugs.length },
+    { key: 'billing', label: 'Billing' },
   ];
 
   // ─── Loading State ──────────────────────────────────────────
@@ -978,6 +984,11 @@ export default function SettingsPage() {
             )}
           </Card>
         )}
+
+        {/* ═══ Tab 6: Billing ═══ */}
+        {activeTab === 'billing' && (
+          <BillingSection billing={billing} />
+        )}
       </div>
 
       {/* ═══ MODALS ═══ */}
@@ -1167,6 +1178,163 @@ export default function SettingsPage() {
         </div>
       </Modal>
 
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────
+//  Billing Section — Settings → Billing tab
+// ────────────────────────────────────────────────────────────────────
+
+const PLAN_INFO: Record<string, { label: string; pricePhp: number; description: string }> = {
+  solo: { label: 'Solo', pricePhp: 1499, description: 'For single-dentist clinics' },
+  clinic: { label: 'Clinic', pricePhp: 2999, description: 'For growing clinics' },
+  multibranch: { label: 'Multi-branch', pricePhp: 4999, description: 'For chains and multi-location clinics' },
+};
+
+const STATUS_LABELS: Record<ClinicBilling['subscription_status'], { label: string; tone: 'info' | 'success' | 'warning' | 'danger' }> = {
+  trialing: { label: 'Free trial', tone: 'info' },
+  active: { label: 'Active', tone: 'success' },
+  past_due: { label: 'Past due', tone: 'warning' },
+  canceled: { label: 'Canceled', tone: 'danger' },
+};
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-PH', {
+    year: 'numeric', month: 'long', day: 'numeric',
+  });
+}
+
+function daysBetween(fromIso: string, toIso: string): number {
+  const ms = new Date(toIso).getTime() - new Date(fromIso).getTime();
+  return Math.ceil(ms / 86_400_000);
+}
+
+function BillingSection({ billing }: { billing: ClinicBilling | null }) {
+  if (!billing) {
+    return (
+      <Card title="Subscription">
+        <EmptyState
+          icon={CreditCard}
+          title="No subscription on file"
+          description="This account wasn't created through the standard signup flow, so we don't have billing details for it. Contact support if you believe this is a mistake."
+        />
+      </Card>
+    );
+  }
+
+  const planInfo = PLAN_INFO[billing.plan] ?? {
+    label: billing.plan,
+    pricePhp: 0,
+    description: 'Custom plan',
+  };
+  const status = STATUS_LABELS[billing.subscription_status] ?? {
+    label: billing.subscription_status,
+    tone: 'info' as const,
+  };
+  const now = new Date().toISOString();
+  const trialDaysLeft = daysBetween(now, billing.trial_end);
+  const isTrialing = billing.subscription_status === 'trialing';
+  const trialExpired = isTrialing && trialDaysLeft <= 0;
+
+  return (
+    <div className="space-y-6">
+      {/* Plan hero */}
+      <Card>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-bold text-gray-900">{planInfo.label}</h3>
+              <Badge variant={status.tone}>{status.label}</Badge>
+            </div>
+            <p className="mt-1 text-sm text-gray-500">{planInfo.description}</p>
+            {planInfo.pricePhp > 0 && (
+              <p className="mt-3 text-2xl font-bold text-gray-900">
+                {formatMoney(planInfo.pricePhp * 100)}
+                <span className="ml-1 text-sm font-normal text-gray-500">/ month</span>
+              </p>
+            )}
+          </div>
+
+          <Button
+            variant="outline"
+            disabled
+            title="Subscription management coming soon"
+          >
+            Manage subscription
+          </Button>
+        </div>
+      </Card>
+
+      {/* Trial countdown card — only while trialing */}
+      {isTrialing && (
+        <Card>
+          <div className="flex items-start gap-4">
+            <div className={cn(
+              'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl',
+              trialExpired ? 'bg-red-50 text-red-600' : 'bg-primary-50 text-primary-600',
+            )}>
+              <CreditCard className="h-6 w-6" />
+            </div>
+            <div className="flex-1">
+              {trialExpired ? (
+                <>
+                  <p className="text-base font-semibold text-gray-900">Your free trial has ended</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Trial ended on {formatDate(billing.trial_end)}. Add a payment method to keep
+                    using Ava without interruption.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-base font-semibold text-gray-900">
+                    {trialDaysLeft} {trialDaysLeft === 1 ? 'day' : 'days'} left in your free trial
+                  </p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Your trial ends on {formatDate(billing.trial_end)}. You won't be charged until then.
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Account details */}
+      <Card title="Account details">
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+          <div>
+            <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Clinic name</dt>
+            <dd className="mt-1 text-sm text-gray-900">{billing.name}</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Plan</dt>
+            <dd className="mt-1 text-sm text-gray-900">{planInfo.label}</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Member since</dt>
+            <dd className="mt-1 text-sm text-gray-900">{formatDate(billing.created_at)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              {isTrialing ? 'Trial ends' : 'Next charge'}
+            </dt>
+            <dd className="mt-1 text-sm text-gray-900">{formatDate(billing.trial_end)}</dd>
+          </div>
+        </dl>
+      </Card>
+
+      {/* Help footer */}
+      <p className="text-xs text-gray-500">
+        Need help with billing? Email{' '}
+        <a
+          className="font-medium text-primary-600 hover:underline"
+          href="mailto:support@avasmartdental.ph"
+        >
+          support@avasmartdental.ph
+        </a>
+        .
+      </p>
     </div>
   );
 }

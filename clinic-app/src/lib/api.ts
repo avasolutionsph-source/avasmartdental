@@ -15,6 +15,7 @@ import type {
   ServiceItem,
   PaymentTermOption,
   ClinicSettings,
+  ClinicBilling,
   Drug,
   Prescription,
   Expense,
@@ -988,6 +989,20 @@ export async function getClinicSettings(): Promise<ClinicSettings> {
   };
 }
 
+/**
+ * Fetches the subscription / trial row for the signed-in clinic owner.
+ * RLS on public.clinics scopes the SELECT to one row (owner_user_id =
+ * auth.uid()), so no explicit filter is needed.
+ */
+export async function getClinicBilling(): Promise<ClinicBilling | null> {
+  const { data, error } = await supabase
+    .from('clinics')
+    .select('id, name, plan, trial_end, subscription_status, created_at')
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data as ClinicBilling | null) ?? null;
+}
+
 export async function updateClinicSettings(
   data: Partial<Omit<ClinicSettings, 'dentists' | 'services' | 'payment_terms'>>,
 ): Promise<void> {
@@ -1438,6 +1453,7 @@ export const api = {
   // Settings
   getClinicSettings,
   updateClinicSettings,
+  getClinicBilling,
   getDentists,
   createDentist,
   updateDentist,
