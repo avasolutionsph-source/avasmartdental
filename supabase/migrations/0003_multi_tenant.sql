@@ -46,10 +46,15 @@ grant execute on function public.current_clinic_id() to anon, authenticated;
 -- per-clinic during backfill.
 delete from public.payment_terms;
 
--- clinic_settings has a `check (id = 1)` constraint we need to drop
--- before we can have multiple rows. Also drop the default on id.
+-- clinic_settings was designed as a single-row table:
+--   id int primary key default 1 check (id = 1)
+-- In multi-tenant, there's one row per clinic keyed by clinic_id, so
+-- drop the legacy id column + PK entirely. clinic_id will become the
+-- primary key further down. Wipe existing rows since they have no
+-- clinic_id.
 alter table public.clinic_settings drop constraint if exists clinic_settings_id_check;
-alter table public.clinic_settings alter column id drop default;
+alter table public.clinic_settings drop constraint if exists clinic_settings_pkey;
+alter table public.clinic_settings drop column if exists id;
 delete from public.clinic_settings;
 
 
@@ -171,11 +176,20 @@ begin
 end $$;
 
 
--- ── clinic_settings: enforce one-row-per-clinic ──────────────────────
--- Replaces the old `check (id = 1)` single-row constraint with a unique
--- index on clinic_id.
-create unique index if not exists clinic_settings_clinic_id_key
-  on public.clinic_settings (clinic_id);
+-- ── clinic_settings: clinic_id becomes the primary key ──────────────
+-- After dropping the legacy `id` column above, the table is now keyed
+-- solely by clinic_id. PK gives us UNIQUE + NOT NULL for free, so
+-- exactly one settings row per clinic is enforced.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+     where conname = 'clinic_settings_pkey'
+       and conrelid = 'public.clinic_settings'::regclass
+  ) then
+    alter table public.clinic_settings add primary key (clinic_id);
+  end if;
+end $$;
 
 
 -- ════════════════════════════════════════════════════════════════════
