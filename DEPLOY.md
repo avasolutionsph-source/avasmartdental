@@ -29,19 +29,40 @@ source of truth — everything has been copied here.
 Without this, signups on the landing site won't be able to log into the
 clinic app.
 
-### Recommendation: use Smart-Dental's existing Supabase
+### RESOLVED (2026-07-20): the project is `ehirqsqkfnjuuvzthsrx`
 
-You said the clinic app already has its own Supabase (with patients,
-appointments, billing, etc. tables already populated or schema-ready).
-Easiest path: point the **landing site** at that same Supabase.
+> ⚠️ **An earlier version of this file said `ehirqsqkfnjuuvzthsrx` was "no
+> longer needed — you can leave it idle or delete it." That was wrong, and
+> following it would have destroyed production.** Verified by reading the
+> Supabase URL out of the deployed clinic-app bundle at
+> `smartdentalapp.avasolutions.ph`.
+
+Both apps use **one** project:
+
+| | |
+|---|---|
+| Name | `AvaSmartDental` |
+| Ref | `ehirqsqkfnjuuvzthsrx` |
+| URL | `https://ehirqsqkfnjuuvzthsrx.supabase.co` |
+| Org | `avasolutions4-ui's Org` (`elyoxxbtqckrxtmhriym`) |
+| Region | `ap-northeast-1` (Tokyo) · free tier, nano |
+
+Note the org: this is **not** `AvaDataSolutionsPH's Org`, so a CLI logged
+into that other account will not list this project. `AvaSPaCentral`
+(`idoywgbrtavmzlumwido`) lives in the same org as AvaSmartDental.
+
+CLI setup (the token name must contain **no spaces** — a space truncates the
+browser sign-in URL and drops the `public_key` parameter):
+
+```bash
+npx supabase login --name smartdental-cli
+npx supabase link --project-ref ehirqsqkfnjuuvzthsrx
+```
 
 You'll need from the Supabase Dashboard → Project Settings → API:
 
-- Project URL (`https://xxxxxx.supabase.co`)
+- Project URL (`https://ehirqsqkfnjuuvzthsrx.supabase.co`)
 - Publishable key (`sb_publishable_...`) or legacy `anon` JWT
-
-The new Supabase project (`ehirqsqkfnjuuvzthsrx`) we created earlier is
-no longer needed — you can leave it idle or delete it.
 
 ---
 
@@ -60,7 +81,7 @@ In Supabase Dashboard → SQL Editor, paste and run **in this order**:
 
 Skip whichever are already applied. Most projects already have these.
 
-**B. Landing-site signup + multi-tenant layer (NEW — needs to be applied):**
+**B. Landing-site signup + multi-tenant layer — ✅ APPLIED 2026-07-20.**
 - `supabase/migrations/0001_clinics.sql` — `clinics` table + RLS
 - `supabase/migrations/0002_handle_new_user.sql` — trigger that
   creates a `clinics` row from checkout signup metadata
@@ -68,8 +89,23 @@ Skip whichever are already applied. Most projects already have these.
   every clinic-data table, tenant-scoped RLS, auto-provisioning of
   per-clinic settings/payment_terms
 
-⚠️ **Apply 0003 before letting more than one clinic sign up.** Without
-it, any signed-in user can read every clinic's patients, billing, etc.
+⚠️ **0003 was NOT applied until 2026-07-20**, despite being committed to git
+since `25f0431`. Committed ≠ applied. The live database ran without tenant
+isolation the whole time — harmless only because it had zero users. Verified
+applied by checking for the 22 `idx_<table>_clinic_id` indexes it creates.
+
+**From now on, use the CLI, not the SQL Editor.** Migrations applied by
+hand are invisible to `supabase migration list`, so the CLI believes they
+never ran and will try to re-apply them:
+
+```bash
+npx supabase migration list     # local vs remote — both columns should match
+npx supabase db push --dry-run  # always dry-run first
+npx supabase db push
+```
+
+If a migration was already applied by hand, mark it without re-running:
+`npx supabase migration repair --status applied <version>`.
 
 After this, a checkout signup creates: auth user → clinics row →
 clinic_settings row → default payment_terms — all atomically via
