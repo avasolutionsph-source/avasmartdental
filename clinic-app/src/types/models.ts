@@ -317,8 +317,11 @@ export type ClinicBilling = {
   name: string;
   plan: 'solo' | 'clinic' | 'multibranch' | string;
   trial_end: string;
+  paid_until: string;
   subscription_status: 'trialing' | 'active' | 'past_due' | 'canceled';
   created_at: string;
+  planLabel: string;
+  planAmountCentavos: number;
 };
 
 // ─── Notification ──────────────────────────────────────────────────

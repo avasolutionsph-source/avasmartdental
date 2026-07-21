@@ -997,10 +997,17 @@ export async function getClinicSettings(): Promise<ClinicSettings> {
 export async function getClinicBilling(): Promise<ClinicBilling | null> {
   const { data, error } = await supabase
     .from('clinics')
-    .select('id, name, plan, trial_end, subscription_status, created_at')
+    .select(
+      'id, name, plan, trial_end, paid_until, subscription_status, created_at, billing_plans!inner(display_name, amount_centavos)'
+    )
     .maybeSingle();
-  if (error) throw new Error(error.message);
-  return (data as ClinicBilling | null) ?? null;
+  if (error || !data) return null;
+  const plan = Array.isArray(data.billing_plans) ? data.billing_plans[0] : data.billing_plans;
+  return {
+    ...data,
+    planLabel: plan.display_name,
+    planAmountCentavos: plan.amount_centavos,
+  } as ClinicBilling;
 }
 
 export async function updateClinicSettings(

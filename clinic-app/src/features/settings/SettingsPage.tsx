@@ -1186,10 +1186,10 @@ export default function SettingsPage() {
 //  Billing Section — Settings → Billing tab
 // ────────────────────────────────────────────────────────────────────
 
-const PLAN_INFO: Record<string, { label: string; pricePhp: number; description: string }> = {
-  solo: { label: 'Solo', pricePhp: 1499, description: 'For single-dentist clinics' },
-  clinic: { label: 'Clinic', pricePhp: 2999, description: 'For growing clinics' },
-  multibranch: { label: 'Multi-branch', pricePhp: 4999, description: 'For chains and multi-location clinics' },
+const PLAN_DESCRIPTIONS: Record<string, string> = {
+  solo: 'For single-dentist clinics',
+  clinic: 'For growing clinics',
+  multibranch: 'For chains and multi-location clinics',
 };
 
 const STATUS_LABELS: Record<ClinicBilling['subscription_status'], { label: string; tone: 'info' | 'success' | 'warning' | 'danger' }> = {
@@ -1223,11 +1223,6 @@ function BillingSection({ billing }: { billing: ClinicBilling | null }) {
     );
   }
 
-  const planInfo = PLAN_INFO[billing.plan] ?? {
-    label: billing.plan,
-    pricePhp: 0,
-    description: 'Custom plan',
-  };
   const status = STATUS_LABELS[billing.subscription_status] ?? {
     label: billing.subscription_status,
     tone: 'info' as const,
@@ -1244,13 +1239,13 @@ function BillingSection({ billing }: { billing: ClinicBilling | null }) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <h3 className="text-xl font-bold text-gray-900">{planInfo.label}</h3>
+              <h3 className="text-xl font-bold text-gray-900">{billing.planLabel}</h3>
               <Badge variant={status.tone}>{status.label}</Badge>
             </div>
-            <p className="mt-1 text-sm text-gray-500">{planInfo.description}</p>
-            {planInfo.pricePhp > 0 && (
+            <p className="mt-1 text-sm text-gray-500">{PLAN_DESCRIPTIONS[billing.plan] ?? 'Custom plan'}</p>
+            {billing.planAmountCentavos > 0 && (
               <p className="mt-3 text-2xl font-bold text-gray-900">
-                {formatMoney(planInfo.pricePhp * 100)}
+                {formatMoney(billing.planAmountCentavos)}
                 <span className="ml-1 text-sm font-normal text-gray-500">/ month</span>
               </p>
             )}
@@ -1309,7 +1304,7 @@ function BillingSection({ billing }: { billing: ClinicBilling | null }) {
           </div>
           <div>
             <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Plan</dt>
-            <dd className="mt-1 text-sm text-gray-900">{planInfo.label}</dd>
+            <dd className="mt-1 text-sm text-gray-900">{billing.planLabel}</dd>
           </div>
           <div>
             <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Member since</dt>
