@@ -515,7 +515,40 @@ git commit -m "feat(billing): gate writes on entitlement, keep reads open"
 
 Guide §7 rule 1 is about exactly the bug already present here: `app/src/lib/plans.ts` says ₱1,499/₱2,999/₱4,999 and `SettingsPage.tsx:1189` repeats them in `PLAN_INFO`. Two copies drift.
 
-**Files:** Create `app/src/lib/plans.test.ts`; Modify `clinic-app/src/features/settings/SettingsPage.tsx`, `clinic-app/src/lib/api.ts`
+**Files:** Create `app/src/lib/plans.test.ts`, `supabase/migrations/0006_clinics_plan_fk.sql`; Modify `clinic-app/src/features/settings/SettingsPage.tsx`, `clinic-app/src/lib/api.ts`, `clinic-app/src/types/models.ts`
+
+> **Prerequisite discovered during execution:** `clinics.plan` has NO foreign
+> key to `billing_plans.id`. PostgREST resource embedding
+> (`billing_plans!inner(...)`) requires one, or the query fails with "Could not
+> find a relationship between 'clinics' and 'billing_plans'". Step 0 below adds
+> it. This also enforces referential integrity — a clinic can no longer hold a
+> plan id that isn't in the price table.
+
+- [ ] **Step 0: Add the FK that makes the embed work**
+
+Create `supabase/migrations/0006_clinics_plan_fk.sql`:
+
+```sql
+-- 0006_clinics_plan_fk.sql — clinics.plan must reference the price table.
+-- Enables PostgREST embedding of billing_plans on clinics, and guarantees a
+-- clinic's plan id always exists in billing_plans (referential integrity).
+alter table public.clinics
+  drop constraint if exists clinics_plan_fkey;
+alter table public.clinics
+  add constraint clinics_plan_fkey
+  foreign key (plan) references public.billing_plans (id);
+```
+
+Apply: `npx supabase db push --dry-run --linked` (show output), then
+`npx supabase db push --linked --yes`. The DB is empty, so no existing row can
+violate the constraint. Verify:
+
+```sql
+select conname, pg_get_constraintdef(oid)
+from pg_constraint
+where conrelid = 'public.clinics'::regclass and conname = 'clinics_plan_fkey';
+-- expect one row: FOREIGN KEY (plan) REFERENCES billing_plans(id)
+```
 
 - [ ] **Step 1: Write the failing drift test**
 
