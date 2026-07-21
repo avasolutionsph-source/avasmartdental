@@ -12,16 +12,11 @@ import {
   AccountForm,
   type AccountData,
 } from "../components/checkout/AccountForm";
-import {
-  PaymentForm,
-  type PaymentData,
-} from "../components/checkout/PaymentForm";
 import { ReviewStep } from "../components/checkout/ReviewStep";
 import { BuildingAnimation } from "../components/checkout/BuildingAnimation";
 
 const steps = [
   { id: "account", label: "Account" },
-  { id: "payment", label: "Payment" },
   { id: "review", label: "Review" },
 ];
 
@@ -31,13 +26,6 @@ const emptyAccount: AccountData = {
   email: "",
   phone: "",
   password: "",
-};
-
-const emptyPayment: PaymentData = {
-  cardholder: "",
-  cardNumber: "",
-  expiry: "",
-  cvc: "",
 };
 
 function addDays(d: Date, n: number): Date {
@@ -54,7 +42,6 @@ export default function CheckoutPage() {
 
   const [stepIdx, setStepIdx] = useState(0);
   const [account, setAccount] = useState<AccountData>(emptyAccount);
-  const [payment, setPayment] = useState<PaymentData>(emptyPayment);
 
   const [building, setBuilding] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
@@ -73,11 +60,6 @@ export default function CheckoutPage() {
   function handleAccountNext(data: AccountData) {
     setAccount(data);
     setStepIdx(1);
-  }
-
-  function handlePaymentNext(data: PaymentData) {
-    setPayment(data);
-    setStepIdx(2);
   }
 
   async function handleConfirm() {
@@ -184,20 +166,11 @@ export default function CheckoutPage() {
                     <AccountForm initial={account} onNext={handleAccountNext} />
                   )}
                   {stepIdx === 1 && (
-                    <PaymentForm
-                      initial={payment}
-                      onBack={() => setStepIdx(0)}
-                      onNext={handlePaymentNext}
-                    />
-                  )}
-                  {stepIdx === 2 && (
                     <ReviewStep
                       plan={plan}
                       account={account}
-                      payment={payment}
-                      onBack={() => setStepIdx(1)}
+                      onBack={() => setStepIdx(0)}
                       onEditAccount={() => setStepIdx(0)}
-                      onEditPayment={() => setStepIdx(1)}
                       onConfirm={handleConfirm}
                     />
                   )}
