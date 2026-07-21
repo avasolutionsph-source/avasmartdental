@@ -419,6 +419,30 @@ npx supabase db push
 
 This is the test that matters. In the SQL Editor, impersonating a real clinic owner:
 
+**Structural check (works even with an empty DB — no session needed):**
+
+```sql
+-- Every one of the 22 tenant tables must carry all three write policies with
+-- the entitlement gate. NOTE: coalesce BOTH qual and with_check — an INSERT
+-- policy has qual = NULL, and `NULL || anything` is NULL, which would silently
+-- under-count. (This bit us once; the fixed form is below.)
+select count(*) as gated_write_policies
+from pg_policies
+where schemaname = 'public'
+  and policyname in ('tenant_insert','tenant_update','tenant_delete')
+  and coalesce(qual,'') || ' ' || coalesce(with_check,'') like '%clinic_is_writable%';
+-- expect: 66  (22 tables x 3 policies)
+
+-- SELECT policies must be untouched — reads stay open for lapsed clinics.
+select count(*) as ungated_selects
+from pg_policies
+where schemaname = 'public' and policyname = 'tenant_select'
+  and coalesce(qual,'') not like '%clinic_is_writable%';
+-- expect: 22
+```
+
+**Behavioral check (only once a real clinic + owner session exists):**
+
 ```sql
 -- Pick a clinic and force it past grace.
 update public.clinics
