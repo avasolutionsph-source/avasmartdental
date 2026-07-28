@@ -102,3 +102,12 @@ Tests: `app` 9 passing, `clinic-app` 6 passing. No secrets in git; `.env` gitign
 
 8. **Backups.** The project is on the free tier with no backups. Before real
    patient data lands, move to a plan with daily backups + PITR.
+
+9. **Monitor settlement 500s.** `settle_invoice` raises `amount_mismatch` when
+   the amount NextPay reports differs from the invoice's stored amount; the
+   caller returns 5xx (so the poll reports not-yet-paid / NextPay retries) and
+   logs it. In normal operation this never fires (the invoice stores its own
+   amount at creation). A *sustained* run of settlement 500s means either a
+   genuine mismatch needing manual resolution, or that NextPay changed the
+   `getPaymentIntent` response shape — either way it strands a paying customer,
+   so alert on repeated `settle_invoice failed` / `amount_mismatch` log lines.

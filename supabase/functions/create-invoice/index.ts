@@ -13,6 +13,18 @@ function one<T>(v: T | T[] | null | undefined): T | null {
   return v ?? null;
 }
 
+// Add exactly one calendar month, clamping month-end anchors. Plain
+// setUTCMonth(+1) overflows: Jan 31 -> Mar 3 (Feb has no 31st), which would
+// over-credit a few days and drift the anchor forward every short month. This
+// clamps Jan 31 -> Feb 28/29. All UTC — paid_until is a UTC timestamptz.
+function addOneMonthUTC(d: Date): Date {
+  const r = new Date(d);
+  const day = r.getUTCDate();
+  r.setUTCMonth(r.getUTCMonth() + 1);
+  if (r.getUTCDate() < day) r.setUTCDate(0); // rolled over -> last day of intended month
+  return r;
+}
+
 Deno.serve(async (req) => {
   const origin = req.headers.get('origin');
   if (req.method === 'OPTIONS') return preflight(origin);
@@ -37,8 +49,7 @@ Deno.serve(async (req) => {
 
   const amountCentavos = plan.amount_centavos;
   const periodStart = new Date(clinic.paid_until);
-  const periodEnd = new Date(periodStart);
-  periodEnd.setMonth(periodEnd.getMonth() + 1);
+  const periodEnd = addOneMonthUTC(periodStart);
   const periodTag = periodStart.toISOString().slice(0, 10);
 
   // At most one invoice row per (clinic, period). Reuse it across retries.
@@ -54,7 +65,10 @@ Deno.serve(async (req) => {
   }
 
   const invoiceId = existing?.id ?? crypto.randomUUID();
-  const baseExternalId = existing?.external_id ?? `inv-${clinicId.slice(0, 8)}-${periodTag}`;
+  // Full clinic id (not an 8-char prefix): billing_invoices.external_id is
+  // globally UNIQUE, so a truncated prefix could collide between two clinics in
+  // the same period and block the second one from ever billing.
+  const baseExternalId = existing?.external_id ?? `inv-${clinicId}-${periodTag}`;
 
   if (!existing) {
     const { error } = await db.from('billing_invoices').insert({
