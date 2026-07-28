@@ -13,6 +13,7 @@ export type Plan = {
   ctaKind: "checkout" | "sales";
   featured: boolean;
   bullets: string[];
+  comingSoon: boolean;
 };
 
 export const plans: Plan[] = [
@@ -35,6 +36,7 @@ export const plans: Plan[] = [
       "Cloud sync via Supabase",
       "Email support",
     ],
+    comingSoon: false,
   },
   {
     id: "tier_2_6",
@@ -55,6 +57,7 @@ export const plans: Plan[] = [
       "Priority chat support",
       "Free migration of existing patient data",
     ],
+    comingSoon: true,
   },
   {
     id: "tier_6plus",
@@ -75,6 +78,7 @@ export const plans: Plan[] = [
       "Dedicated account manager",
       "Onboarding + staff training session",
     ],
+    comingSoon: true,
   },
 ];
 

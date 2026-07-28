@@ -1,4 +1,4 @@
-import { Check, Sparkles } from "lucide-react";
+import { Check, Clock, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { plans } from "../lib/plans";
 
@@ -67,7 +67,15 @@ export function Pricing() {
                   ))}
                 </ul>
 
-                {t.ctaKind === "checkout" ? (
+                {t.comingSoon ? (
+                  <span
+                    aria-disabled="true"
+                    className="relative z-10 mt-9 inline-flex w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-full border border-line bg-surface-2 px-5 py-3 text-sm font-bold text-fg-subtle"
+                  >
+                    <Clock className="h-4 w-4" />
+                    Coming soon
+                  </span>
+                ) : t.ctaKind === "checkout" ? (
                   <Link to={`/checkout?plan=${t.id}`} className={btnClass}>
                     {t.cta}
                   </Link>

@@ -40,12 +40,15 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const plan = useMemo(() => getPlan(params.get("plan")), [params]);
 
-  // tier_6plus is request-priced, not self-serve — its CTA everywhere else
-  // (Pricing.tsx) goes to mailto, never here. A stray/manual ?plan=tier_6plus
-  // shouldn't render a "Start free trial" checkout for an unpriced plan, so
-  // bounce back to pricing where the real "Contact us" CTA lives.
+  // Only tier_1 is buyable today — tier_2_6 and tier_6plus are marked
+  // `comingSoon` (multi-clinic isn't live yet) and their CTAs everywhere
+  // else (Pricing.tsx) render as a disabled "Coming soon" badge, never a
+  // link here. A stray/manual ?plan=tier_2_6 or ?plan=tier_6plus shouldn't
+  // render a checkout for a plan that isn't sellable yet, so bounce back to
+  // pricing. Also guards the (currently unreachable) case of a plan that is
+  // neither comingSoon nor checkout-able.
   useEffect(() => {
-    if (plan.ctaKind === "sales") {
+    if (plan.comingSoon || plan.ctaKind !== "checkout") {
       navigate("/pricing", { replace: true });
     }
   }, [plan, navigate]);
