@@ -1206,9 +1206,9 @@ export default function SettingsPage() {
 // ────────────────────────────────────────────────────────────────────
 
 const PLAN_DESCRIPTIONS: Record<string, string> = {
-  solo: 'For single-dentist clinics',
-  clinic: 'For growing clinics',
-  multibranch: 'For chains and multi-location clinics',
+  tier_1: 'For single-location clinics',
+  tier_2_6: 'For growing multi-location practices',
+  tier_6plus: 'For chains and multi-location networks',
 };
 
 const STATUS_LABELS: Record<ClinicBilling['subscription_status'], { label: string; tone: 'info' | 'success' | 'warning' | 'danger' }> = {
@@ -1262,10 +1262,23 @@ function BillingSection({ billing, onPaid }: { billing: ClinicBilling | null; on
               <Badge variant={status.tone}>{status.label}</Badge>
             </div>
             <p className="mt-1 text-sm text-gray-500">{PLAN_DESCRIPTIONS[billing.plan] ?? 'Custom plan'}</p>
-            {billing.planAmountCentavos > 0 && (
-              <p className="mt-3 text-2xl font-bold text-gray-900">
-                {formatMoney(billing.planAmountCentavos)}
-                <span className="ml-1 text-sm font-normal text-gray-500">/ month</span>
+            {(billing.planMonthlyCentavos != null || billing.planAnnualCentavos != null) && (
+              <p className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-2xl font-bold text-gray-900">
+                {billing.planMonthlyCentavos != null && (
+                  <span className={billing.billing_period === 'annual' ? 'text-gray-400' : ''}>
+                    {formatMoney(billing.planMonthlyCentavos)}
+                    <span className="ml-1 text-sm font-normal text-gray-500">/ mo</span>
+                  </span>
+                )}
+                {billing.planMonthlyCentavos != null && billing.planAnnualCentavos != null && (
+                  <span className="text-sm font-normal text-gray-400">or</span>
+                )}
+                {billing.planAnnualCentavos != null && (
+                  <span className={billing.billing_period !== 'annual' ? 'text-gray-400' : ''}>
+                    {formatMoney(billing.planAnnualCentavos)}
+                    <span className="ml-1 text-sm font-normal text-gray-500">/ yr</span>
+                  </span>
+                )}
               </p>
             )}
           </div>

@@ -315,13 +315,15 @@ export type ClinicSettings = {
 export type ClinicBilling = {
   id: string;
   name: string;
-  plan: 'solo' | 'clinic' | 'multibranch' | string;
+  plan: 'tier_1' | 'tier_2_6' | 'tier_6plus' | string;
   trial_end: string;
   paid_until: string;
   subscription_status: 'trialing' | 'active' | 'past_due' | 'canceled';
   created_at: string;
+  billing_period: 'monthly' | 'annual' | null;
   planLabel: string;
-  planAmountCentavos: number;
+  planMonthlyCentavos: number | null;
+  planAnnualCentavos: number | null;
 };
 
 // ─── Notification ──────────────────────────────────────────────────

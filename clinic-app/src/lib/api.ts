@@ -998,7 +998,7 @@ export async function getClinicBilling(): Promise<ClinicBilling | null> {
   const { data, error } = await supabase
     .from('clinics')
     .select(
-      'id, name, plan, trial_end, paid_until, subscription_status, created_at, billing_plans!inner(display_name, amount_centavos)'
+      'id, name, plan, trial_end, paid_until, subscription_status, created_at, billing_period, billing_plans!inner(display_name, monthly_centavos, annual_centavos)'
     )
     .maybeSingle();
   if (error || !data) return null;
@@ -1006,7 +1006,8 @@ export async function getClinicBilling(): Promise<ClinicBilling | null> {
   return {
     ...data,
     planLabel: plan.display_name,
-    planAmountCentavos: plan.amount_centavos,
+    planMonthlyCentavos: plan.monthly_centavos,
+    planAnnualCentavos: plan.annual_centavos,
   } as ClinicBilling;
 }
 
