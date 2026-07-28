@@ -25,6 +25,16 @@ function addOneMonthUTC(d: Date): Date {
   return r;
 }
 
+// Add exactly one year, clamping the Feb 29 leap-day anchor to Feb 28 on a
+// non-leap target year (same rolled-over-day logic as addOneMonthUTC).
+function addOneYearUTC(d: Date): Date {
+  const r = new Date(d);
+  const day = r.getUTCDate();
+  r.setUTCFullYear(r.getUTCFullYear() + 1);
+  if (r.getUTCDate() < day) r.setUTCDate(0); // Feb 29 -> Feb 28
+  return r;
+}
+
 Deno.serve(async (req) => {
   const origin = req.headers.get('origin');
   if (req.method === 'OPTIONS') return preflight(origin);
@@ -33,24 +43,61 @@ Deno.serve(async (req) => {
   const clinicId = await callerClinicId(req.headers.get('authorization'));
   if (!clinicId) return json(401, { error: 'unauthorized' }, origin);
 
+  // `period` is a product choice (which cadence to bill), never an amount —
+  // the SERVER always looks up the price from billing_plans below. Default to
+  // the clinic's stored billing_period, else 'monthly'. Anything else is
+  // rejected outright so a typo can't silently fall through to monthly.
+  let bodyPeriod: unknown;
+  try {
+    const body = await req.json().catch(() => ({}));
+    bodyPeriod = (body as Record<string, unknown>)?.period;
+  } catch {
+    bodyPeriod = undefined;
+  }
+  if (bodyPeriod !== undefined && bodyPeriod !== 'monthly' && bodyPeriod !== 'annual') {
+    return json(400, { error: 'invalid_period' }, origin);
+  }
+
   const db = serviceClient();
 
   // Price comes from the DB. The request body is NEVER consulted for amount.
   const { data: clinic } = await db
     .from('clinics')
-    .select('id, name, plan, paid_until, billing_plans!inner(amount_centavos, self_serve)')
+    .select(
+      'id, name, plan, paid_until, billing_period, billing_plans!inner(monthly_centavos, annual_centavos, self_serve)',
+    )
     .eq('id', clinicId)
     .maybeSingle();
   if (!clinic) return json(404, { error: 'clinic_not_found' }, origin);
 
-  const plan = one<{ amount_centavos: number; self_serve: boolean }>(clinic.billing_plans);
+  const plan = one<{ monthly_centavos: number | null; annual_centavos: number | null; self_serve: boolean }>(
+    clinic.billing_plans,
+  );
   if (!plan) return json(500, { error: 'plan_missing' }, origin);
   if (!plan.self_serve) return json(400, { error: 'plan_not_self_serve' }, origin);
 
-  const amountCentavos = plan.amount_centavos;
+  const period: 'monthly' | 'annual' =
+    (bodyPeriod as 'monthly' | 'annual' | undefined) ??
+    (clinic.billing_period === 'annual' ? 'annual' : 'monthly');
+
+  const amountCentavos = period === 'annual' ? plan.annual_centavos : plan.monthly_centavos;
+  if (amountCentavos == null) return json(400, { error: 'plan_not_self_serve' }, origin);
+
   const periodStart = new Date(clinic.paid_until);
-  const periodEnd = addOneMonthUTC(periodStart);
+  const periodEnd = period === 'annual' ? addOneYearUTC(periodStart) : addOneMonthUTC(periodStart);
   const periodTag = periodStart.toISOString().slice(0, 10);
+
+  // Persist the chosen cadence on the clinic so a renewal/cron run (which has
+  // no body to read `period` from) reuses the same cadence next time.
+  if (clinic.billing_period !== period) {
+    const { error: clinicUpdateError } = await db
+      .from('clinics')
+      .update({ billing_period: period })
+      .eq('id', clinicId);
+    if (clinicUpdateError) {
+      console.error('clinic billing_period update failed', clinicUpdateError);
+    }
+  }
 
   // At most one invoice row per (clinic, period). Reuse it across retries.
   const { data: existing } = await db
@@ -79,6 +126,7 @@ Deno.serve(async (req) => {
       period_start: periodStart.toISOString(),
       period_end: periodEnd.toISOString(),
       external_id: baseExternalId,
+      billing_period: period,
       status: 'open',
     });
     if (error) {
@@ -131,6 +179,7 @@ Deno.serve(async (req) => {
     qrImageDataUrl: intent.qrImageDataUrl,
     expiresAt: qrExpiresAt,
     amountCentavos,
+    billingPeriod: period,
     periodStart: periodStart.toISOString(),
     periodEnd: periodEnd.toISOString(),
   }, origin);
