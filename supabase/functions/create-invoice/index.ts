@@ -112,10 +112,15 @@ Deno.serve(async (req) => {
   }
 
   const invoiceId = existing?.id ?? crypto.randomUUID();
-  // Full clinic id (not an 8-char prefix): billing_invoices.external_id is
-  // globally UNIQUE, so a truncated prefix could collide between two clinics in
-  // the same period and block the second one from ever billing.
-  const baseExternalId = existing?.external_id ?? `inv-${clinicId}-${periodTag}`;
+  // The cadence is part of the external_id (and therefore the NextPay
+  // idempotency key). Without it, switching monthly<->annual for the SAME
+  // period would reuse one idempotency key with two different amounts, which
+  // NextPay rejects — stranding the customer on the pay screen. Full clinic id
+  // (not an 8-char prefix) keeps external_id globally unique across clinics.
+  const desiredExternalId = `inv-${clinicId}-${periodTag}-${period}`;
+
+  // Did the caller switch cadence on an existing open invoice for this period?
+  const cadenceSwitched = !!existing && existing.billing_period !== period;
 
   if (!existing) {
     const { error } = await db.from('billing_invoices').insert({
@@ -125,7 +130,7 @@ Deno.serve(async (req) => {
       amount_centavos: amountCentavos,
       period_start: periodStart.toISOString(),
       period_end: periodEnd.toISOString(),
-      external_id: baseExternalId,
+      external_id: desiredExternalId,
       billing_period: period,
       status: 'open',
     });
@@ -133,14 +138,36 @@ Deno.serve(async (req) => {
       console.error('invoice insert failed', error);
       return json(500, { error: 'invoice_insert_failed' }, origin);
     }
+  } else if (cadenceSwitched) {
+    // Re-point the existing open invoice at the new cadence: new amount, new
+    // period_end, new external_id, and clear the stale intent so a fresh one is
+    // minted below with the correct amount.
+    const { error } = await db.from('billing_invoices').update({
+      amount_centavos: amountCentavos,
+      period_end: periodEnd.toISOString(),
+      billing_period: period,
+      external_id: desiredExternalId,
+      payment_intent_id: null,
+      qr_string: null,
+      qr_expires_at: null,
+    }).eq('id', invoiceId).eq('status', 'open');
+    if (error) {
+      console.error('invoice cadence update failed', error);
+      return json(500, { error: 'invoice_update_failed' }, origin);
+    }
   }
 
-  // Idempotency: NextPay dedupes on the idempotency key derived from external_id
+  const baseExternalId = cadenceSwitched
+    ? desiredExternalId
+    : (existing?.external_id ?? desiredExternalId);
+
+  // Idempotency: NextPay dedupes on the key derived from external_id
   // (pi-<external_id>). A repeated "Pay" click within the QR's life returns the
-  // SAME intent — same QR string AND same base64 image — which is exactly what
-  // we want. Only once the previous QR has expired do we mint a genuinely new
-  // intent, by bumping the external_id with a retry suffix.
-  const prevExpired = existing?.qr_expires_at
+  // SAME intent — same QR string AND same base64 image. Only once the previous
+  // QR has expired do we mint a genuinely new intent, by bumping the
+  // external_id with a retry suffix. (A cadence switch already cleared the old
+  // QR above, so prevExpired is false and the fresh cadence id is used.)
+  const prevExpired = !cadenceSwitched && existing?.qr_expires_at
     ? new Date(existing.qr_expires_at) <= new Date()
     : false;
   const intentExternalId = prevExpired
