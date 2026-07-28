@@ -37,10 +37,23 @@ export function Pricing() {
                   <p className="mt-1 text-sm text-fg-muted">{t.desc}</p>
                 </div>
 
-                <div className="relative z-10 mt-7 flex items-baseline gap-1.5">
-                  <span className="text-2xl font-bold text-brand-600">₱</span>
-                  <span className="text-5xl font-bold tabular-nums">{t.priceLabel}</span>
-                  <span className="text-sm text-fg-subtle">{t.period}</span>
+                <div className="relative z-10 mt-7">
+                  {t.price === null ? (
+                    <span className="text-4xl font-bold tabular-nums">{t.priceLabel}</span>
+                  ) : (
+                    <>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-bold text-brand-600">₱</span>
+                        <span className="text-5xl font-bold tabular-nums">{t.priceLabel}</span>
+                        <span className="text-sm text-fg-subtle">{t.period}</span>
+                      </div>
+                      {t.annualPriceLabel && (
+                        <p className="mt-1.5 text-sm text-fg-subtle">
+                          or <span className="font-semibold text-fg-2">₱{t.annualPriceLabel}</span> / year
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
 
                 <ul className="relative z-10 mt-7 space-y-3 text-sm">
@@ -74,7 +87,7 @@ export function Pricing() {
         </div>
 
         <p className="fade-in fade-in-d4 mt-8 text-center text-sm text-fg-subtle">
-          14-day free trial on every plan. No charge today — your card is only
+          18-day free trial on every plan. No charge today — your card is only
           billed after the trial. Cancel anytime.
         </p>
       </div>

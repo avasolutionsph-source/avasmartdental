@@ -20,6 +20,10 @@ export function ReviewStep({
   onConfirm,
 }: Props) {
   const [submitting, setSubmitting] = useState(false);
+  // CheckoutPage redirects away before rendering this for a request-priced
+  // (tier_6plus) plan, so `price` is always a real number here — the `?? 0`
+  // is just to satisfy the type without an assertion.
+  const price = plan.price ?? 0;
 
   async function handleConfirm() {
     if (submitting) return;
@@ -54,11 +58,11 @@ export function ReviewStep({
         <div className="flex items-baseline justify-between gap-3">
           <div>
             <p className="font-medium text-fg">{plan.name}</p>
-            <p className="text-sm text-fg-muted">14-day free trial</p>
+            <p className="text-sm text-fg-muted">18-day free trial</p>
           </div>
           <div className="text-right">
             <p className="font-semibold tabular-nums text-fg">
-              {formatPeso(plan.price)}
+              {formatPeso(price)}
               <span className="text-sm font-normal text-fg-subtle">
                 {plan.period}
               </span>
@@ -69,7 +73,7 @@ export function ReviewStep({
       </ReviewRow>
 
       <p className="text-sm text-fg-muted">
-        Your 14-day trial starts now — no payment needed. We'll show you a
+        Your 18-day trial starts now — no payment needed. We'll show you a
         GCash/Maya QR code before it ends.
       </p>
 

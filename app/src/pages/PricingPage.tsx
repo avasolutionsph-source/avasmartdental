@@ -29,7 +29,7 @@ export default function PricingPage() {
               <span className="text-gradient-brand">Run your whole clinic.</span>
             </h1>
             <p className="fade-in fade-in-d2 mx-auto mt-4 max-w-xl text-base text-fg-muted sm:mt-5 sm:text-lg">
-              Pricing in pesos. No feature gates. 14 days free on every plan.
+              Pricing in pesos, by clinic count. No feature gates. 18 days free on every plan.
             </p>
           </div>
         </section>

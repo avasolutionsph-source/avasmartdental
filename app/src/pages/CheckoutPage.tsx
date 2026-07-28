@@ -40,6 +40,16 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const plan = useMemo(() => getPlan(params.get("plan")), [params]);
 
+  // tier_6plus is request-priced, not self-serve — its CTA everywhere else
+  // (Pricing.tsx) goes to mailto, never here. A stray/manual ?plan=tier_6plus
+  // shouldn't render a "Start free trial" checkout for an unpriced plan, so
+  // bounce back to pricing where the real "Contact us" CTA lives.
+  useEffect(() => {
+    if (plan.ctaKind === "sales") {
+      navigate("/pricing", { replace: true });
+    }
+  }, [plan, navigate]);
+
   const [stepIdx, setStepIdx] = useState(0);
   const [account, setAccount] = useState<AccountData>(emptyAccount);
 
@@ -69,7 +79,9 @@ export default function CheckoutPage() {
     // Kick off the real signup call in parallel with the visual animation.
     // The animation calls `onAnimationDone` when it finishes; we wait for
     // both before navigating.
-    const trialEnd = addDays(new Date(), 14);
+    // Cosmetic only — the server (handle_new_user, 0012) computes the real
+    // 18-day trial end and forces plan=tier_1 regardless of what's sent here.
+    const trialEnd = addDays(new Date(), 18);
     const result = await signupClinic({
       email: account.email,
       password: account.password,
@@ -133,7 +145,7 @@ export default function CheckoutPage() {
               Start your <span className="text-gradient-brand">{plan.name}</span> trial
             </h1>
             <p className="mt-2 max-w-xl text-sm text-fg-muted sm:text-base">
-              14 days free. No charge today — cancel anytime before your trial
+              18 days free. No charge today — cancel anytime before your trial
               ends.
             </p>
           </header>
