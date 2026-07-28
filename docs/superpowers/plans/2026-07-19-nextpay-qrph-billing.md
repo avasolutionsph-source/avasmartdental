@@ -1536,11 +1536,11 @@ git commit -m "feat(billing): webhook nudge behind mandatory re-verification"
 
 QRPh has no auto-charge, so a forgotten QR is lost revenue. Reminders are part of the mechanism, not a nicety. Trial reminders fire at **day 7, 11, 13** (T-7/T-3/T-1 of a 14-day trial); renewal reminders at T-7/T-3/T-1 of `paid_until`.
 
-**Files:** Create `supabase/functions/billing-cron/index.ts`, `supabase/migrations/0006_reminders.sql`
+**Files:** Create `supabase/functions/billing-cron/index.ts`, `supabase/migrations/0008_reminders.sql`
 
 - [ ] **Step 1: Add the reminder ledger**
 
-`supabase/migrations/0006_reminders.sql` — so a reminder is sent once and only once:
+`supabase/migrations/0008_reminders.sql` — so a reminder is sent once and only once:
 
 ```sql
 create table if not exists public.billing_reminders (
@@ -1694,7 +1694,7 @@ Expected: `{"reminders":1,...}`, a `trial_t3` row in `billing_reminders`, and a 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add supabase/migrations/0006_reminders.sql supabase/functions/billing-cron/index.ts
+git add supabase/migrations/0008_reminders.sql supabase/functions/billing-cron/index.ts
 git commit -m "feat(billing): daily reminders at T-7/T-3/T-1 and lapse transitions"
 ```
 
