@@ -990,21 +990,29 @@ export async function getClinicSettings(): Promise<ClinicSettings> {
 }
 
 /**
- * Fetches the subscription / trial row for the signed-in clinic owner.
- * RLS on public.clinics scopes the SELECT to one row (owner_user_id =
- * auth.uid()), so no explicit filter is needed.
+ * Fetches the billing/subscription row for the signed-in owner. Billing is
+ * ACCOUNT-level (Phase B): RLS on public.accounts scopes the SELECT to the
+ * owner's one account, so no explicit filter is needed. The billing view does
+ * not use a clinic name, so `name` is left blank.
  */
 export async function getClinicBilling(): Promise<ClinicBilling | null> {
   const { data, error } = await supabase
-    .from('clinics')
+    .from('accounts')
     .select(
-      'id, name, plan, trial_end, paid_until, subscription_status, created_at, billing_period, billing_plans!inner(display_name, monthly_centavos, annual_centavos)'
+      'id, tier, trial_end, paid_until, subscription_status, created_at, billing_period, billing_plans!inner(display_name, monthly_centavos, annual_centavos)'
     )
     .maybeSingle();
   if (error || !data) return null;
   const plan = Array.isArray(data.billing_plans) ? data.billing_plans[0] : data.billing_plans;
   return {
-    ...data,
+    id: data.id,
+    name: '',
+    plan: data.tier,
+    trial_end: data.trial_end,
+    paid_until: data.paid_until,
+    subscription_status: data.subscription_status,
+    created_at: data.created_at,
+    billing_period: data.billing_period,
     planLabel: plan.display_name,
     planMonthlyCentavos: plan.monthly_centavos,
     planAnnualCentavos: plan.annual_centavos,

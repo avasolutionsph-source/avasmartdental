@@ -60,42 +60,50 @@ Deno.serve(async (req) => {
 
   const db = serviceClient();
 
-  // Price comes from the DB. The request body is NEVER consulted for amount.
+  // Billing lives on the ACCOUNT (Phase B). Resolve the clinic's account and
+  // price off it. The request body is NEVER consulted for amount.
   const { data: clinic } = await db
     .from('clinics')
-    .select(
-      'id, name, plan, paid_until, billing_period, billing_plans!inner(monthly_centavos, annual_centavos, self_serve)',
-    )
+    .select('id, account_id')
     .eq('id', clinicId)
     .maybeSingle();
   if (!clinic) return json(404, { error: 'clinic_not_found' }, origin);
 
+  const { data: account } = await db
+    .from('accounts')
+    .select(
+      'id, tier, paid_until, billing_period, billing_plans!inner(monthly_centavos, annual_centavos, self_serve)',
+    )
+    .eq('id', clinic.account_id)
+    .maybeSingle();
+  if (!account) return json(404, { error: 'account_not_found' }, origin);
+
   const plan = one<{ monthly_centavos: number | null; annual_centavos: number | null; self_serve: boolean }>(
-    clinic.billing_plans,
+    account.billing_plans,
   );
   if (!plan) return json(500, { error: 'plan_missing' }, origin);
   if (!plan.self_serve) return json(400, { error: 'plan_not_self_serve' }, origin);
 
   const period: 'monthly' | 'annual' =
     (bodyPeriod as 'monthly' | 'annual' | undefined) ??
-    (clinic.billing_period === 'annual' ? 'annual' : 'monthly');
+    (account.billing_period === 'annual' ? 'annual' : 'monthly');
 
   const amountCentavos = period === 'annual' ? plan.annual_centavos : plan.monthly_centavos;
   if (amountCentavos == null) return json(400, { error: 'plan_not_self_serve' }, origin);
 
-  const periodStart = new Date(clinic.paid_until);
+  const periodStart = new Date(account.paid_until);
   const periodEnd = period === 'annual' ? addOneYearUTC(periodStart) : addOneMonthUTC(periodStart);
   const periodTag = periodStart.toISOString().slice(0, 10);
 
-  // Persist the chosen cadence on the clinic so a renewal/cron run (which has
+  // Persist the chosen cadence on the ACCOUNT so a renewal/cron run (which has
   // no body to read `period` from) reuses the same cadence next time.
-  if (clinic.billing_period !== period) {
-    const { error: clinicUpdateError } = await db
-      .from('clinics')
+  if (account.billing_period !== period) {
+    const { error: accountUpdateError } = await db
+      .from('accounts')
       .update({ billing_period: period })
-      .eq('id', clinicId);
-    if (clinicUpdateError) {
-      console.error('clinic billing_period update failed', clinicUpdateError);
+      .eq('id', account.id);
+    if (accountUpdateError) {
+      console.error('account billing_period update failed', accountUpdateError);
     }
   }
 
@@ -126,7 +134,7 @@ Deno.serve(async (req) => {
     const { error } = await db.from('billing_invoices').insert({
       id: invoiceId,
       clinic_id: clinicId,
-      plan_id: clinic.plan,
+      plan_id: account.tier,
       amount_centavos: amountCentavos,
       period_start: periodStart.toISOString(),
       period_end: periodEnd.toISOString(),

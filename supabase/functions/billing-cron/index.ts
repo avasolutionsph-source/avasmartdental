@@ -50,17 +50,18 @@ Deno.serve(async (req) => {
   const db = serviceClient();
   const now = Date.now();
 
-  const { data: clinics } = await db
-    .from('clinics')
-    .select('id, name, plan, paid_until, grace_days, subscription_status, owner_user_id')
+  // Billing is account-level (Phase B). Iterate accounts, not clinics.
+  const { data: accounts } = await db
+    .from('accounts')
+    .select('id, paid_until, grace_days, subscription_status, owner_user_id')
     .neq('subscription_status', 'canceled');
 
   let reminders = 0, lapsed = 0;
 
-  for (const c of clinics ?? []) {
-    const paidUntil = Date.parse(c.paid_until);
+  for (const a of accounts ?? []) {
+    const paidUntil = Date.parse(a.paid_until);
     const daysLeft = Math.ceil((paidUntil - now) / DAY);
-    const onTrial = c.subscription_status === 'trialing';
+    const onTrial = a.subscription_status === 'trialing';
 
     const kind =
       daysLeft === 7 ? (onTrial ? 'trial_t7' : 'renewal_t7') :
@@ -70,11 +71,11 @@ Deno.serve(async (req) => {
     if (kind) {
       // Insert first; a duplicate key means it already went out.
       const { error } = await db.from('billing_reminders')
-        .insert({ clinic_id: c.id, kind, period_start: c.paid_until });
+        .insert({ account_id: a.id, kind, period_start: a.paid_until });
       if (!error) {
-        const { data: u } = await db.auth.admin.getUserById(c.owner_user_id);
+        const { data: u } = await db.auth.admin.getUserById(a.owner_user_id);
         if (u?.user?.email) {
-          await sendBillingEmail(u.user.email, kind, { daysLeft, clinic: c.name });
+          await sendBillingEmail(u.user.email, kind, { daysLeft });
         }
         reminders++;
       }
@@ -82,9 +83,9 @@ Deno.serve(async (req) => {
 
     // Past paid_until + grace -> past_due. This only flips a label; the actual
     // write-blocking is done by RLS off the dates, so it cannot drift.
-    const graceEnds = paidUntil + c.grace_days * DAY;
-    if (now > graceEnds && c.subscription_status !== 'past_due') {
-      await db.from('clinics').update({ subscription_status: 'past_due' }).eq('id', c.id);
+    const graceEnds = paidUntil + a.grace_days * DAY;
+    if (now > graceEnds && a.subscription_status !== 'past_due') {
+      await db.from('accounts').update({ subscription_status: 'past_due' }).eq('id', a.id);
       lapsed++;
     }
   }
