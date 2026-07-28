@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Building2, Stethoscope, Wrench, CreditCard, Pill,
   Plus, Pencil, Loader2, Save, Upload, ToggleLeft, ToggleRight, Trash2,
@@ -11,6 +12,8 @@ import {
   Table, Thead, Tbody, Tr, Th, Td, Avatar,
 } from '@/components/ui';
 import { useToast } from '@/components/ui/Toast';
+import { PayInvoiceCard } from '@/features/billing/PayInvoiceCard';
+import { useClinicBilling, useRefetchClinicBilling } from '@/features/billing/useClinicBilling';
 
 // ─── Service Categories ───────────────────────────────────────────
 const SERVICE_CATEGORIES = [
@@ -37,14 +40,23 @@ const DRUG_FORMS = [
 
 // ─── SettingsPage ─────────────────────────────────────────────────
 
+const TAB_KEYS = ['clinic', 'services', 'terms', 'drugs', 'billing'];
+
 export default function SettingsPage() {
   const toast = useToast();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('clinic');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(initialTab && TAB_KEYS.includes(initialTab) ? initialTab : 'clinic');
+
+  // Billing is shared with the app-wide AccessBanner (Layout shell) via
+  // react-query, so a payment made here also clears the banner elsewhere
+  // without a page reload.
+  const { data: billing = null } = useClinicBilling();
+  const refetchBilling = useRefetchClinicBilling();
 
   // Data state
   const [clinic, setClinic] = useState<ClinicSettings | null>(null);
-  const [billing, setBilling] = useState<ClinicBilling | null>(null);
   const [dentists, setDentists] = useState<Dentist[]>([]);
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [paymentTerms, setPaymentTerms] = useState<PaymentTermOption[]>([]);
@@ -113,19 +125,15 @@ export default function SettingsPage() {
     let cancelled = false;
     async function load() {
       try {
-        const [c, d, s, pt, dr, b] = await Promise.all([
+        const [c, d, s, pt, dr] = await Promise.all([
           api.getClinicSettings(),
           api.getDentists(),
           api.getServices(),
           api.getPaymentTerms(),
           api.getDrugs(),
-          // Tolerate missing clinics row (e.g. admin-created user) — Billing
-          // tab will show an empty state instead of failing the whole page.
-          api.getClinicBilling().catch(() => null),
         ]);
         if (!cancelled) {
           setClinic(c);
-          setBilling(b);
           setDentists(d);
           setServices(s);
           setPaymentTerms(pt);
@@ -440,7 +448,18 @@ export default function SettingsPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+      <Tabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            next.set('tab', tab);
+            return next;
+          }, { replace: true });
+        }}
+      />
 
       <div className="mt-6">
         {/* ═══ Tab 1: Clinic Profile ═══ */}
@@ -987,7 +1006,7 @@ export default function SettingsPage() {
 
         {/* ═══ Tab 6: Billing ═══ */}
         {activeTab === 'billing' && (
-          <BillingSection billing={billing} />
+          <BillingSection billing={billing} onPaid={refetchBilling} />
         )}
       </div>
 
@@ -1210,7 +1229,7 @@ function daysBetween(fromIso: string, toIso: string): number {
   return Math.ceil(ms / 86_400_000);
 }
 
-function BillingSection({ billing }: { billing: ClinicBilling | null }) {
+function BillingSection({ billing, onPaid }: { billing: ClinicBilling | null; onPaid: () => void }) {
   if (!billing) {
     return (
       <Card title="Subscription">
@@ -1250,15 +1269,16 @@ function BillingSection({ billing }: { billing: ClinicBilling | null }) {
               </p>
             )}
           </div>
-
-          <Button
-            variant="outline"
-            disabled
-            title="Subscription management coming soon"
-          >
-            Manage subscription
-          </Button>
         </div>
+      </Card>
+
+      {/* Pay via QR — GCash, Maya, or any QRPh bank app */}
+      <Card title="Pay your subscription">
+        <p className="mb-4 text-sm text-gray-500">
+          Generate a QR code to pay for the next billing period. Payment is confirmed
+          automatically — no need to refresh this page.
+        </p>
+        <PayInvoiceCard onPaid={onPaid} />
       </Card>
 
       {/* Trial countdown card — only while trialing */}
@@ -1315,6 +1335,12 @@ function BillingSection({ billing }: { billing: ClinicBilling | null }) {
               {isTrialing ? 'Trial ends' : 'Next charge'}
             </dt>
             <dd className="mt-1 text-sm text-gray-900">{formatDate(billing.trial_end)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Paid through</dt>
+            <dd className="mt-1 text-sm text-gray-900">
+              {billing.paid_until ? formatDate(billing.paid_until) : '—'}
+            </dd>
           </div>
         </dl>
       </Card>
