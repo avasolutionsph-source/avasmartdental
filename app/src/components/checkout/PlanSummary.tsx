@@ -91,8 +91,8 @@ export function PlanSummary({ plan }: { plan: Plan }) {
         <div className="flex items-start gap-2">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
           <p>
-            Card details are tokenized through NextPay — Ava never stores raw
-            card numbers.
+            You'll pay by GCash/Maya QR through NextPay — secure, with no
+            payment details for us to store.
           </p>
         </div>
       </div>

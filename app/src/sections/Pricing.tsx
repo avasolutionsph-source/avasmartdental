@@ -95,8 +95,8 @@ export function Pricing() {
         </div>
 
         <p className="fade-in fade-in-d4 mt-8 text-center text-sm text-fg-subtle">
-          18-day free trial on every plan. No charge today — your card is only
-          billed after the trial. Cancel anytime.
+          18-day free trial on every plan. No charge today — pay by GCash/Maya
+          QR after your trial. Cancel anytime.
         </p>
       </div>
     </section>

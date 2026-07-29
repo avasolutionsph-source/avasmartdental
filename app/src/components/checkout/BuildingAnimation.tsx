@@ -17,7 +17,7 @@ const phases: Phase[] = [
   },
   {
     key: "trial",
-    label: "Activating 14-day trial",
+    label: "Activating 18-day trial",
     hint: "Almost there — preparing your dashboard",
     durationMs: 900,
   },

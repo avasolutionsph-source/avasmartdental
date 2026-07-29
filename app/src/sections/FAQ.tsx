@@ -24,8 +24,8 @@ const faqs = [
     a: "Yes. Ava prints Resibo from any invoice, including multi-page treatment receipts. PWD/Senior Citizen 20% discount is applied automatically with the proper breakdown.",
   },
   {
-    q: "How does the 14-day free trial work?",
-    a: "No credit card. You get the full Clinic tier for 14 days. If you don't continue, your data is exportable and your account simply pauses — nothing is deleted for 30 days.",
+    q: "How does the 18-day free trial work?",
+    a: "You pay by GCash/Maya QR after the trial — nothing today, and no auto-billing. You get full access for 18 days. If you don't continue, your data is exportable and your account simply pauses — nothing is deleted for 30 days.",
   },
 ];
 
