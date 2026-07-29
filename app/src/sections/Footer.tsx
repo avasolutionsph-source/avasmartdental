@@ -25,7 +25,7 @@ const cols = [
     h: "Company",
     items: [
       ["About", "#"],
-      ["Contact", "mailto:hello@avasmartdental.ph"],
+      ["Contact", "mailto:avasolutionsph@gmail.com"],
       ["Privacy", "#"],
       ["Terms", "#"],
     ],
@@ -44,9 +44,11 @@ export function Footer() {
               designed for Filipino dentists. Built locally in the Philippines.
             </p>
             <p className="mt-6 text-xs text-fg-subtle">
-              Manila · Cebu · Davao
+              4 Queborac Drive, Naga City, 4400
               <br />
-              hello@avasmartdental.ph
+              +63 917 123 4567
+              <br />
+              avasolutionsph@gmail.com
             </p>
           </div>
 

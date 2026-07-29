@@ -118,7 +118,7 @@ export default function CheckoutSuccessPage() {
               <ArrowRight className="h-4 w-4" />
             </Link>
             <a
-              href={`mailto:hello@avasmartdental.ph?subject=${encodeURIComponent(
+              href={`mailto:avasolutionsph@gmail.com?subject=${encodeURIComponent(
                 `Help setting up ${state.clinicName || "my clinic"}`,
               )}`}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-white px-6 py-3 text-sm font-semibold text-fg-2 transition-colors hover:border-line-2 hover:bg-surface-2"
@@ -131,7 +131,7 @@ export default function CheckoutSuccessPage() {
           <p className="fade-in fade-in-d4 mt-8 text-center text-xs text-fg-subtle">
             Didn't get the email? Check spam, or{" "}
             <a
-              href="mailto:hello@avasmartdental.ph"
+              href="mailto:avasolutionsph@gmail.com"
               className="text-brand-600 underline-offset-2 hover:underline"
             >
               contact support

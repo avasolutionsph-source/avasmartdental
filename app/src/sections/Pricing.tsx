@@ -132,7 +132,7 @@ export function Pricing() {
                     </Link>
                   ) : (
                     <a
-                      href={`mailto:hello@avasmartdental.ph?subject=${encodeURIComponent(
+                      href={`mailto:avasolutionsph@gmail.com?subject=${encodeURIComponent(
                         `${t.name} plan — multi-branch enquiry`,
                       )}`}
                       className={btnClass}
