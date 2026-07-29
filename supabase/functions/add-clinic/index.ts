@@ -31,6 +31,12 @@ Deno.serve(async (req) => {
     .maybeSingle();
   if (!account) return json(404, { error: 'account_not_found' }, origin);
 
+  // Entitlement gate (add-then-bill): a lapsed account can't add new branches.
+  // Trial/active/grace may add — the tier bump self-corrects at the next bill.
+  // Fail-open on unknown, consistent with clinic_is_writable().
+  const { data: tier } = await db.rpc('account_access_tier', { p_account_id: accountId });
+  if (tier === 'read_only') return json(403, { error: 'subscription_lapsed' }, origin);
+
   // clinics still carries deprecated NOT NULL billing columns (0016); fill them
   // with the account's values. The ACCOUNT is authoritative; the tier is
   // recomputed by the clinics_recompute_tier trigger after this insert.
