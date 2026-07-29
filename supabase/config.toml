@@ -3,6 +3,9 @@ project_id = "ehirqsqkfnjuuvzthsrx"
 [functions.create-invoice]
 verify_jwt = true
 
+[functions.add-clinic]
+verify_jwt = true
+
 [functions.invoice-status]
 verify_jwt = true
 

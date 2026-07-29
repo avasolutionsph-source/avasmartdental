@@ -1,14 +1,14 @@
 import { NextPayClient } from '../_shared/nextpayClient.ts';
 import { json, preflight } from '../_shared/http.ts';
-import { callerClinicId, nextpayEnv, serviceClient } from '../_shared/db.ts';
+import { callerAccountId, nextpayEnv, serviceClient } from '../_shared/db.ts';
 import { settleInvoice } from '../_shared/settle.ts';
 
 Deno.serve(async (req) => {
   const origin = req.headers.get('origin');
   if (req.method === 'OPTIONS') return preflight(origin);
 
-  const clinicId = await callerClinicId(req.headers.get('authorization'));
-  if (!clinicId) return json(401, { error: 'unauthorized' }, origin);
+  const accountId = await callerAccountId(req.headers.get('authorization'));
+  if (!accountId) return json(401, { error: 'unauthorized' }, origin);
 
   const invoiceId = new URL(req.url).searchParams.get('invoice_id');
   if (!invoiceId) return json(400, { error: 'invoice_id_required' }, origin);
@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
   const db = serviceClient();
   const { data: invoice } = await db
     .from('billing_invoices').select('*')
-    .eq('id', invoiceId).eq('clinic_id', clinicId)   // scope to the caller
+    .eq('id', invoiceId).eq('account_id', accountId)   // scope to the caller's account
     .maybeSingle();
   if (!invoice) return json(404, { error: 'invoice_not_found' }, origin);
   if (invoice.status === 'paid') return json(200, { status: 'paid' }, origin);

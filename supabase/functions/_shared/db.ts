@@ -9,8 +9,8 @@ export function serviceClient(): SupabaseClient {
   );
 }
 
-/** Resolves the caller's JWT to their clinic id, or null. */
-export async function callerClinicId(authHeader: string | null): Promise<string | null> {
+/** Resolves the caller's JWT to their auth user id, or null. */
+async function callerUserId(authHeader: string | null): Promise<string | null> {
   if (!authHeader) return null;
   const anon = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -18,9 +18,19 @@ export async function callerClinicId(authHeader: string | null): Promise<string 
     { global: { headers: { Authorization: authHeader } }, auth: { persistSession: false } },
   );
   const { data: { user } } = await anon.auth.getUser();
-  if (!user) return null;
+  return user?.id ?? null;
+}
+
+/**
+ * Resolves the caller's JWT to their ACCOUNT id, or null. Billing is
+ * account-level (an owner has one account, which may own many clinics), so
+ * billing functions scope by account, never by a single clinic.
+ */
+export async function callerAccountId(authHeader: string | null): Promise<string | null> {
+  const userId = await callerUserId(authHeader);
+  if (!userId) return null;
   const { data } = await serviceClient()
-    .from('clinics').select('id').eq('owner_user_id', user.id).maybeSingle();
+    .from('accounts').select('id').eq('owner_user_id', userId).maybeSingle();
   return data?.id ?? null;
 }
 

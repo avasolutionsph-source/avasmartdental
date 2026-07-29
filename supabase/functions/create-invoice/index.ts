@@ -1,6 +1,6 @@
 import { NextPayClient } from '../_shared/nextpayClient.ts';
 import { json, preflight } from '../_shared/http.ts';
-import { callerClinicId, nextpayEnv, serviceClient } from '../_shared/db.ts';
+import { callerAccountId, nextpayEnv, serviceClient } from '../_shared/db.ts';
 
 const QR_TTL_SECONDS = 900; // 15 min, per the guide's default
 
@@ -40,12 +40,12 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight(origin);
   if (req.method !== 'POST') return json(405, { error: 'method_not_allowed' }, origin);
 
-  const clinicId = await callerClinicId(req.headers.get('authorization'));
-  if (!clinicId) return json(401, { error: 'unauthorized' }, origin);
+  const accountId = await callerAccountId(req.headers.get('authorization'));
+  if (!accountId) return json(401, { error: 'unauthorized' }, origin);
 
   // `period` is a product choice (which cadence to bill), never an amount —
   // the SERVER always looks up the price from billing_plans below. Default to
-  // the clinic's stored billing_period, else 'monthly'. Anything else is
+  // the account's stored billing_period, else 'monthly'. Anything else is
   // rejected outright so a typo can't silently fall through to monthly.
   let bodyPeriod: unknown;
   try {
@@ -60,21 +60,14 @@ Deno.serve(async (req) => {
 
   const db = serviceClient();
 
-  // Billing lives on the ACCOUNT (Phase B). Resolve the clinic's account and
-  // price off it. The request body is NEVER consulted for amount.
-  const { data: clinic } = await db
-    .from('clinics')
-    .select('id, account_id')
-    .eq('id', clinicId)
-    .maybeSingle();
-  if (!clinic) return json(404, { error: 'clinic_not_found' }, origin);
-
+  // Billing is account-level (Phase B/C). Price off the account. The request
+  // body is NEVER consulted for amount.
   const { data: account } = await db
     .from('accounts')
     .select(
       'id, tier, paid_until, billing_period, billing_plans!inner(monthly_centavos, annual_centavos, self_serve)',
     )
-    .eq('id', clinic.account_id)
+    .eq('id', accountId)
     .maybeSingle();
   if (!account) return json(404, { error: 'account_not_found' }, origin);
 
@@ -107,11 +100,11 @@ Deno.serve(async (req) => {
     }
   }
 
-  // At most one invoice row per (clinic, period). Reuse it across retries.
+  // At most one invoice row per (account, period). Reuse it across retries.
   const { data: existing } = await db
     .from('billing_invoices')
     .select('*')
-    .eq('clinic_id', clinicId)
+    .eq('account_id', accountId)
     .eq('period_start', periodStart.toISOString())
     .maybeSingle();
 
@@ -123,9 +116,9 @@ Deno.serve(async (req) => {
   // The cadence is part of the external_id (and therefore the NextPay
   // idempotency key). Without it, switching monthly<->annual for the SAME
   // period would reuse one idempotency key with two different amounts, which
-  // NextPay rejects — stranding the customer on the pay screen. Full clinic id
-  // (not an 8-char prefix) keeps external_id globally unique across clinics.
-  const desiredExternalId = `inv-${clinicId}-${periodTag}-${period}`;
+  // NextPay rejects — stranding the customer on the pay screen. Full account id
+  // keeps external_id globally unique across accounts.
+  const desiredExternalId = `inv-${accountId}-${periodTag}-${period}`;
 
   // Did the caller switch cadence on an existing open invoice for this period?
   const cadenceSwitched = !!existing && existing.billing_period !== period;
@@ -133,7 +126,7 @@ Deno.serve(async (req) => {
   if (!existing) {
     const { error } = await db.from('billing_invoices').insert({
       id: invoiceId,
-      clinic_id: clinicId,
+      account_id: accountId,
       plan_id: account.tier,
       amount_centavos: amountCentavos,
       period_start: periodStart.toISOString(),
@@ -192,7 +185,7 @@ Deno.serve(async (req) => {
       externalId: intentExternalId,
       amountCentavos,
       expiresInSeconds: QR_TTL_SECONDS,
-      metadata: { invoice_id: invoiceId, clinic_id: clinicId, period: periodTag },
+      metadata: { invoice_id: invoiceId, account_id: accountId, period: periodTag },
     });
   } catch (e) {
     console.error('createPaymentIntent failed', e);
