@@ -6,6 +6,7 @@ import { useAppStore } from '@/lib/store';
 import { fetchNotifications } from '@/lib/api';
 import type { NotificationItem } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { ClinicSwitcher } from '@/features/clinics/ClinicSwitcher';
 
 // ─── Page title map ───────────────────────────────────────────────
 const pageTitles: Record<string, string> = {
@@ -176,10 +177,8 @@ export function TopBar() {
         {/* Divider */}
         <div className="hidden sm:block w-px h-8 bg-gray-200 mx-1" />
 
-        {/* Clinic Name */}
-        <span className="hidden lg:inline text-sm font-medium text-gray-600">
-          Ava Smart Dental
-        </span>
+        {/* Clinic Switcher */}
+        <ClinicSwitcher />
 
         {/* User Menu */}
         <div className="relative" ref={userMenuRef}>

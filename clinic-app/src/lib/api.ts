@@ -1270,6 +1270,24 @@ export async function deleteExpense(id: number): Promise<void> {
 }
 
 // ════════════════════════════════════════════════════════════════════
+//  CLINICS (branches)
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Lists the signed-in account's clinics (branches). Unlike every other
+ * tenant-scoped read in this file, this does NOT depend on the
+ * `x-clinic-id` header — `clinics` has an owner-scoped SELECT policy
+ * (`auth.uid() = owner_user_id`), so it always returns every clinic the
+ * account owns regardless of which one is currently active. That's what
+ * makes it safe to call before an active clinic has been chosen.
+ */
+export async function getClinics(): Promise<{ id: string; name: string }[]> {
+  return fetchAll<{ id: string; name: string }>(() =>
+    supabase.from('clinics').select('id, name').order('name'),
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
 //  NOTIFICATIONS
 // ════════════════════════════════════════════════════════════════════
 
@@ -1501,6 +1519,8 @@ export const api = {
   createExpense,
   updateExpense,
   deleteExpense,
+  // Clinics
+  getClinics,
   // Notifications
   getNotifications,
   fetchNotifications,
