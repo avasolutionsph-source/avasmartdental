@@ -57,7 +57,7 @@ export const plans: Plan[] = [
       "Priority chat support",
       "Free migration of existing patient data",
     ],
-    comingSoon: true,
+    comingSoon: false,
   },
   {
     id: "tier_6plus",
@@ -78,7 +78,10 @@ export const plans: Plan[] = [
       "Dedicated account manager",
       "Onboarding + staff training session",
     ],
-    comingSoon: true,
+    // Multi-clinic is live (Phase C), so this is no longer gated — it
+    // renders as its normal ctaKind: 'sales' contact CTA (mailto), never a
+    // checkout flow (CheckoutPage guards on ctaKind, not just comingSoon).
+    comingSoon: false,
   },
 ];
 
