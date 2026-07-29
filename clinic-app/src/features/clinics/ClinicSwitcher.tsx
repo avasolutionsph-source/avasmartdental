@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Building2, ChevronDown } from 'lucide-react';
+import { Building2, ChevronDown, Plus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { useActiveClinic } from './activeClinic';
 import { useClinics } from './useClinics';
-import { AddClinicButton } from './AddClinicButton';
+import { AddClinicModal } from './AddClinicModal';
 
 /**
  * Nav dropdown for the account's clinics (branches). Always renders — even
@@ -18,6 +18,7 @@ export function ClinicSwitcher() {
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,10 +83,22 @@ export function ClinicSwitcher() {
           </div>
 
           <div className="mt-1 border-t border-gray-100 pt-1">
-            <AddClinicButton onDone={() => setOpen(false)} />
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setAddOpen(true);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50"
+            >
+              <Plus className="h-4 w-4" />
+              Add clinic
+            </button>
           </div>
         </div>
       )}
+
+      <AddClinicModal isOpen={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }
