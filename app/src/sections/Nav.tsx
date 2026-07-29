@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Logo } from "../components/Logo";
+import { clinicLoginUrl } from "../lib/clinicApp";
 
 type LinkItem = { label: string; href: string; isRoute?: boolean };
 
@@ -63,13 +64,13 @@ export function Nav() {
 
         <div className="hidden items-center gap-3 md:flex">
           <a
-            href="#login"
+            href={clinicLoginUrl()}
             className="text-sm font-medium text-fg-muted transition-colors hover:text-fg"
           >
             Sign in
           </a>
           <Link
-            to="/pricing"
+            to="/checkout?plan=tier_1"
             className="shimmer-sweep inline-flex items-center justify-center rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white transition-all duration-300 hover:bg-brand-700 hover:shadow-glow-brand"
           >
             Get Ava
@@ -92,10 +93,17 @@ export function Nav() {
             {links.map((l) => (
               <NavLink key={l.href} link={l} onClick={() => setOpen(false)} />
             ))}
-            <Link
-              to="/pricing"
+            <a
+              href={clinicLoginUrl()}
               onClick={() => setOpen(false)}
-              className="mt-2 rounded-full bg-brand-600 px-4 py-2.5 text-center text-sm font-bold text-white"
+              className="mt-2 text-sm font-medium text-fg-muted transition-colors hover:text-fg"
+            >
+              Sign in
+            </a>
+            <Link
+              to="/checkout?plan=tier_1"
+              onClick={() => setOpen(false)}
+              className="mt-1 rounded-full bg-brand-600 px-4 py-2.5 text-center text-sm font-bold text-white"
             >
               Get Ava
             </Link>
