@@ -9,46 +9,62 @@ Branch: **feat/nextpay-payments**.
 
 ---
 
-## Done & verified (sandbox)
+## Done & verified (sandbox) — Phases A, B, C
 
-**Database** (migrations 0004–0008, applied to the live project):
-- `billing_plans` — the single server-side price table (Solo ₱1,499 / Clinic
-  ₱2,999 / Multi-branch ₱4,999). All charging reads from here.
-- `clinics.paid_until` + `grace_days` — the real entitlement clock.
-- `billing_invoices` — one row per monthly charge; owner-read-only RLS.
-- `billing_reminders` — send-once ledger.
-- Write-gate RLS on all 22 tenant tables: writes require `clinic_is_writable()`
-  (**fail-open** — only a definitive lapse blocks new entries; reads and export
-  always stay open). Verified: 66 gated write policies, 22 untouched SELECTs.
-- `clinics.plan` → `billing_plans.id` FK (referential integrity + PostgREST embed).
-- Signup trigger sets `paid_until = trial_end` (a bug where 0004's NOT NULL
-  would have broken every new signup — fixed and verified end-to-end).
+Built in three additive phases (migrations 0004–0024). All money-path and
+isolation behaviour verified against the live sandbox.
 
-**Edge functions** (deployed to the live project):
-- `create-invoice` (JWT) — mints a QRPh intent at the **server** price. Verified:
-  amount 149900, QR returned, amount-override from the body rejected.
-- `invoice-status` (JWT) — re-verifies with NextPay, then extends `paid_until`
-  through a `status='open'`-guarded UPDATE. Verified: simulate → paid,
-  `paid_until` +1 month; 3 extra polls left it unchanged (no double credit).
-- `nextpay-webhook` (no JWT) — re-GETs the intent before settling. Verified:
-  forged id → `verify_failed`; genuine → settled via webhook; replayed → no
-  double credit.
-- `billing-cron` (no JWT, `x-cron-secret`) — T-7/T-3/T-1 reminders + past-due
-  lapse. Verified: trialing clinic 3 days out → `trial_t3`, re-run → no
-  double-send, wrong secret → 401.
+**Pricing (current): by clinic count, monthly OR annual.**
+`billing_plans` tiers (the single server-side price table):
+| tier | clinics | monthly | annual | self-serve |
+|---|---|---|---|---|
+| `tier_1` | 1 | ₱699 | ₱7,000 | yes |
+| `tier_2_6` | 2–6 | ₱1,499 | ₱15,000 | yes |
+| `tier_6plus` | 7+ | — | — | no (contact) |
+Trial is **18 days**. Cadence (monthly/annual) is chosen at the pay screen.
 
-**Frontend**:
-- Landing checkout reduced to 2 steps (Account → Review); the non-functional
-  card capture is gone.
-- Clinic app: `PayInvoiceCard` (QR + poll), app-wide `AccessBanner`
-  (grace/read-only), `paid_until` shown as "Paid through", single price source
-  (duplicated `PLAN_INFO` removed; drift test guards it).
+**Account-level billing (Phase B).** Billing lives on a new `accounts` table
+(one per owner), not on clinics. `accounts.paid_until` + `grace_days` are the
+entitlement clock; `accounts.tier` is derived from clinic count.
+`billing_invoices` are account-scoped. The deprecated `clinics.*` billing
+columns are frozen, non-authoritative copies.
 
-**Secrets already set** in Supabase (`ehirqsqkfnjuuvzthsrx`):
-`NEXTPAY_CLIENT_ID`, `NEXTPAY_CLIENT_SECRET` (sandbox pk_test), `NEXTPAY_ACCOUNT_ID`
-(`ce437d23-…`, sandbox), `NEXTPAY_BASE_URL`, `BILLING_CRON_SECRET`.
+**Multi-clinic per account (Phase C).** One account owns many clinics; the app
+sends an `x-clinic-id` header and `current_clinic_id()` returns that clinic
+**only if its account is owned by the caller** (else NULL → RLS deny). A
+malformed header denies cleanly (0024). Adding a branch bumps the tier;
+`add-clinic` is blocked for a lapsed (read_only) account (add-then-bill).
 
-Tests: `app` 9 passing, `clinic-app` 6 passing. No secrets in git; `.env` gitignored.
+**Isolation — exhaustively re-verified (Phase C).** Two accounts, all 22
+tenant tables: account A spoofing B's clinic id reads `[]` on every table,
+INSERT → 403, UPDATE/DELETE → 0 rows, B's data intact. 22/22 `tenant_select`
+policies route through the single `current_clinic_id()` chokepoint; 66 gated
+write policies; `clinic_is_writable()` **fail-open** (only a definite lapse
+blocks writes; reads/export always open).
+
+**Settlement (verified idempotent).** `settle_invoice()` is one atomic SQL
+function: claim (open→paid, guarded) + amount-check + `paid_until =
+GREATEST(paid_until, period_end)` on the account. Verified: simulate → paid,
+`paid_until` advances one period (monthly +1mo / annual +1yr, month-end
+clamped); repeated polls + webhook replay never double-credit; a forged webhook
+→ `verify_failed`.
+
+**Edge functions** (deployed): `create-invoice` (JWT, account-scoped, prices
+monthly/annual server-side), `invoice-status` (JWT), `nextpay-webhook` (no
+JWT, re-verifies), `billing-cron` (no JWT, `x-cron-secret`; account-level
+reminders + lapse), `add-clinic` (JWT, entitlement-gated).
+
+**Paywall integrity (H1, verified).** Trial length + tier are server-authoritative
+(signup ignores client-supplied values); clients cannot write `accounts`
+(no UPDATE policy) — a direct `paid_until` PATCH changes 0 rows.
+
+**Secrets set** in Supabase (`ehirqsqkfnjuuvzthsrx`): `NEXTPAY_CLIENT_ID`,
+`NEXTPAY_CLIENT_SECRET` (sandbox pk_test), `NEXTPAY_ACCOUNT_ID` (`ce437d23-…`,
+sandbox), `NEXTPAY_BASE_URL`, `BILLING_CRON_SECRET`.
+
+Tests: `app` 10 passing, `clinic-app` 6 passing. 24 migrations synced, 0 drift.
+No secrets in git; `.env` gitignored. Live DB has 1 real clinic ("kenn"); all
+test data cleaned up.
 
 ---
 
