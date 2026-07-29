@@ -10,12 +10,6 @@ type Phase = {
 
 const phases: Phase[] = [
   {
-    key: "payment",
-    label: "Securing your payment",
-    hint: "Tokenizing your card with NextPay",
-    durationMs: 1100,
-  },
-  {
     key: "workspace",
     label: "Creating your workspace",
     hint: "Setting up your clinic in Supabase",
@@ -23,7 +17,7 @@ const phases: Phase[] = [
   },
   {
     key: "trial",
-    label: "Activating 14-day trial",
+    label: "Activating 18-day trial",
     hint: "Almost there — preparing your dashboard",
     durationMs: 900,
   },

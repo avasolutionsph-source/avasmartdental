@@ -12,16 +12,11 @@ import {
   AccountForm,
   type AccountData,
 } from "../components/checkout/AccountForm";
-import {
-  PaymentForm,
-  type PaymentData,
-} from "../components/checkout/PaymentForm";
 import { ReviewStep } from "../components/checkout/ReviewStep";
 import { BuildingAnimation } from "../components/checkout/BuildingAnimation";
 
 const steps = [
   { id: "account", label: "Account" },
-  { id: "payment", label: "Payment" },
   { id: "review", label: "Review" },
 ];
 
@@ -31,13 +26,6 @@ const emptyAccount: AccountData = {
   email: "",
   phone: "",
   password: "",
-};
-
-const emptyPayment: PaymentData = {
-  cardholder: "",
-  cardNumber: "",
-  expiry: "",
-  cvc: "",
 };
 
 function addDays(d: Date, n: number): Date {
@@ -52,9 +40,21 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const plan = useMemo(() => getPlan(params.get("plan")), [params]);
 
+  // Only tier_1 is buyable today — tier_2_6 and tier_6plus are marked
+  // `comingSoon` (multi-clinic isn't live yet) and their CTAs everywhere
+  // else (Pricing.tsx) render as a disabled "Coming soon" badge, never a
+  // link here. A stray/manual ?plan=tier_2_6 or ?plan=tier_6plus shouldn't
+  // render a checkout for a plan that isn't sellable yet, so bounce back to
+  // pricing. Also guards the (currently unreachable) case of a plan that is
+  // neither comingSoon nor checkout-able.
+  useEffect(() => {
+    if (plan.comingSoon || plan.ctaKind !== "checkout") {
+      navigate("/pricing", { replace: true });
+    }
+  }, [plan, navigate]);
+
   const [stepIdx, setStepIdx] = useState(0);
   const [account, setAccount] = useState<AccountData>(emptyAccount);
-  const [payment, setPayment] = useState<PaymentData>(emptyPayment);
 
   const [building, setBuilding] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
@@ -75,11 +75,6 @@ export default function CheckoutPage() {
     setStepIdx(1);
   }
 
-  function handlePaymentNext(data: PaymentData) {
-    setPayment(data);
-    setStepIdx(2);
-  }
-
   async function handleConfirm() {
     setSignupError(null);
     setBuilding(true);
@@ -87,7 +82,9 @@ export default function CheckoutPage() {
     // Kick off the real signup call in parallel with the visual animation.
     // The animation calls `onAnimationDone` when it finishes; we wait for
     // both before navigating.
-    const trialEnd = addDays(new Date(), 14);
+    // Cosmetic only — the server (handle_new_user, 0012) computes the real
+    // 18-day trial end and forces plan=tier_1 regardless of what's sent here.
+    const trialEnd = addDays(new Date(), 18);
     const result = await signupClinic({
       email: account.email,
       password: account.password,
@@ -151,7 +148,7 @@ export default function CheckoutPage() {
               Start your <span className="text-gradient-brand">{plan.name}</span> trial
             </h1>
             <p className="mt-2 max-w-xl text-sm text-fg-muted sm:text-base">
-              14 days free. No charge today — cancel anytime before your trial
+              18 days free. No charge today — cancel anytime before your trial
               ends.
             </p>
           </header>
@@ -184,20 +181,11 @@ export default function CheckoutPage() {
                     <AccountForm initial={account} onNext={handleAccountNext} />
                   )}
                   {stepIdx === 1 && (
-                    <PaymentForm
-                      initial={payment}
-                      onBack={() => setStepIdx(0)}
-                      onNext={handlePaymentNext}
-                    />
-                  )}
-                  {stepIdx === 2 && (
                     <ReviewStep
                       plan={plan}
                       account={account}
-                      payment={payment}
-                      onBack={() => setStepIdx(1)}
+                      onBack={() => setStepIdx(0)}
                       onEditAccount={() => setStepIdx(0)}
-                      onEditPayment={() => setStepIdx(1)}
                       onConfirm={handleConfirm}
                     />
                   )}

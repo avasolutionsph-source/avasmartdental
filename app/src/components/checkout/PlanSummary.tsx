@@ -18,7 +18,11 @@ function formatDate(d: Date): string {
 }
 
 export function PlanSummary({ plan }: { plan: Plan }) {
-  const trialEnd = addDays(new Date(), 14);
+  const trialEnd = addDays(new Date(), 18);
+  // CheckoutPage redirects away before rendering this for a request-priced
+  // (tier_6plus) plan, so `price` is always a real number here — the `?? 0`
+  // is just to satisfy the type without an assertion.
+  const price = plan.price ?? 0;
 
   return (
     <aside className="rounded-3xl border border-line bg-white p-6 shadow-clinical sm:p-7 lg:sticky lg:top-24">
@@ -44,7 +48,7 @@ export function PlanSummary({ plan }: { plan: Plan }) {
           </div>
           <div className="text-right">
             <p className="text-2xl font-bold tabular-nums text-fg">
-              {formatPeso(plan.price)}
+              {formatPeso(price)}
             </p>
             <p className="text-xs text-fg-subtle">{plan.period}</p>
           </div>
@@ -54,12 +58,12 @@ export function PlanSummary({ plan }: { plan: Plan }) {
       <dl className="mt-5 space-y-3 text-sm">
         <div className="flex items-center justify-between">
           <dt className="text-fg-muted">Subtotal</dt>
-          <dd className="tabular-nums text-fg-2">{formatPeso(plan.price)}</dd>
+          <dd className="tabular-nums text-fg-2">{formatPeso(price)}</dd>
         </div>
         <div className="flex items-center justify-between">
-          <dt className="text-fg-muted">14-day free trial</dt>
+          <dt className="text-fg-muted">18-day free trial</dt>
           <dd className="tabular-nums font-medium text-brand-700">
-            −{formatPeso(plan.price)}
+            −{formatPeso(price)}
           </dd>
         </div>
         <div className="border-t border-line pt-3" />
@@ -75,7 +79,7 @@ export function PlanSummary({ plan }: { plan: Plan }) {
           <p>
             First charge of{" "}
             <span className="font-semibold text-fg-2">
-              {formatPeso(plan.price)}
+              {formatPeso(price)}
             </span>{" "}
             on{" "}
             <span className="font-semibold text-fg-2">
@@ -87,8 +91,8 @@ export function PlanSummary({ plan }: { plan: Plan }) {
         <div className="flex items-start gap-2">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
           <p>
-            Card details are tokenized through NextPay — Ava never stores raw
-            card numbers.
+            You'll pay by GCash/Maya QR through NextPay — secure, with no
+            payment details for us to store.
           </p>
         </div>
       </div>

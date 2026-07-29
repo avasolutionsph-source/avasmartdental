@@ -3,38 +3,30 @@ import { ArrowLeft, Loader2, Lock, Pencil } from "lucide-react";
 import type { Plan } from "../../lib/plans";
 import { formatPeso } from "../../lib/plans";
 import type { AccountData } from "./AccountForm";
-import type { PaymentData } from "./PaymentForm";
 
 type Props = {
   plan: Plan;
   account: AccountData;
-  payment: PaymentData;
   onBack: () => void;
   onEditAccount: () => void;
-  onEditPayment: () => void;
   onConfirm: () => Promise<void> | void;
 };
-
-function maskCard(cardNumber: string): string {
-  const digits = cardNumber.replace(/\D/g, "");
-  if (digits.length < 4) return "•••• ••••";
-  return `•••• •••• •••• ${digits.slice(-4)}`;
-}
 
 export function ReviewStep({
   plan,
   account,
-  payment,
   onBack,
   onEditAccount,
-  onEditPayment,
   onConfirm,
 }: Props) {
-  const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // CheckoutPage redirects away before rendering this for a request-priced
+  // (tier_6plus) plan, so `price` is always a real number here — the `?? 0`
+  // is just to satisfy the type without an assertion.
+  const price = plan.price ?? 0;
 
   async function handleConfirm() {
-    if (!agreed || submitting) return;
+    if (submitting) return;
     setSubmitting(true);
     try {
       await onConfirm();
@@ -62,24 +54,15 @@ export function ReviewStep({
         <p className="text-sm text-fg-muted">{account.phone}</p>
       </ReviewRow>
 
-      <ReviewRow title="Payment method" onEdit={onEditPayment}>
-        <p className="font-medium tabular-nums text-fg">
-          {maskCard(payment.cardNumber)}
-        </p>
-        <p className="text-sm text-fg-muted">
-          {payment.cardholder} · exp {payment.expiry}
-        </p>
-      </ReviewRow>
-
       <ReviewRow title="Plan">
         <div className="flex items-baseline justify-between gap-3">
           <div>
             <p className="font-medium text-fg">{plan.name}</p>
-            <p className="text-sm text-fg-muted">14-day free trial</p>
+            <p className="text-sm text-fg-muted">18-day free trial</p>
           </div>
           <div className="text-right">
             <p className="font-semibold tabular-nums text-fg">
-              {formatPeso(plan.price)}
+              {formatPeso(price)}
               <span className="text-sm font-normal text-fg-subtle">
                 {plan.period}
               </span>
@@ -89,20 +72,10 @@ export function ReviewStep({
         </div>
       </ReviewRow>
 
-      <label className="flex items-start gap-3 rounded-2xl border border-line bg-surface-2 p-4 text-sm text-fg-2">
-        <input
-          type="checkbox"
-          checked={agreed}
-          onChange={(e) => setAgreed(e.target.checked)}
-          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-brand-600"
-        />
-        <span>
-          I authorize NextPay to charge my card{" "}
-          <span className="font-semibold">{formatPeso(plan.price)}</span>{" "}
-          {plan.period} after the 14-day free trial. I can cancel anytime from
-          my account settings to avoid the charge.
-        </span>
-      </label>
+      <p className="text-sm text-fg-muted">
+        Your 18-day trial starts now — no payment needed. We'll show you a
+        GCash/Maya QR code before it ends.
+      </p>
 
       <div className="flex items-center justify-between gap-3 pt-2">
         <button
@@ -117,7 +90,7 @@ export function ReviewStep({
         <button
           type="button"
           onClick={handleConfirm}
-          disabled={!agreed || submitting}
+          disabled={submitting}
           className="shimmer-sweep inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-sm font-bold text-white transition-all duration-300 hover:bg-brand-700 hover:shadow-glow-brand disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-brand-600 disabled:hover:shadow-none"
         >
           {submitting ? (

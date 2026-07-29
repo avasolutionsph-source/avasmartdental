@@ -1,4 +1,4 @@
-import { Check, Sparkles } from "lucide-react";
+import { Check, Clock, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { plans } from "../lib/plans";
 
@@ -37,10 +37,23 @@ export function Pricing() {
                   <p className="mt-1 text-sm text-fg-muted">{t.desc}</p>
                 </div>
 
-                <div className="relative z-10 mt-7 flex items-baseline gap-1.5">
-                  <span className="text-2xl font-bold text-brand-600">₱</span>
-                  <span className="text-5xl font-bold tabular-nums">{t.priceLabel}</span>
-                  <span className="text-sm text-fg-subtle">{t.period}</span>
+                <div className="relative z-10 mt-7">
+                  {t.price === null ? (
+                    <span className="text-4xl font-bold tabular-nums">{t.priceLabel}</span>
+                  ) : (
+                    <>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-bold text-brand-600">₱</span>
+                        <span className="text-5xl font-bold tabular-nums">{t.priceLabel}</span>
+                        <span className="text-sm text-fg-subtle">{t.period}</span>
+                      </div>
+                      {t.annualPriceLabel && (
+                        <p className="mt-1.5 text-sm text-fg-subtle">
+                          or <span className="font-semibold text-fg-2">₱{t.annualPriceLabel}</span> / year
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
 
                 <ul className="relative z-10 mt-7 space-y-3 text-sm">
@@ -54,7 +67,15 @@ export function Pricing() {
                   ))}
                 </ul>
 
-                {t.ctaKind === "checkout" ? (
+                {t.comingSoon ? (
+                  <span
+                    aria-disabled="true"
+                    className="relative z-10 mt-9 inline-flex w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-full border border-line bg-surface-2 px-5 py-3 text-sm font-bold text-fg-subtle"
+                  >
+                    <Clock className="h-4 w-4" />
+                    Coming soon
+                  </span>
+                ) : t.ctaKind === "checkout" ? (
                   <Link to={`/checkout?plan=${t.id}`} className={btnClass}>
                     {t.cta}
                   </Link>
@@ -74,8 +95,8 @@ export function Pricing() {
         </div>
 
         <p className="fade-in fade-in-d4 mt-8 text-center text-sm text-fg-subtle">
-          14-day free trial on every plan. No charge today — your card is only
-          billed after the trial. Cancel anytime.
+          18-day free trial on every plan. No charge today — pay by GCash/Maya
+          QR after your trial. Cancel anytime.
         </p>
       </div>
     </section>

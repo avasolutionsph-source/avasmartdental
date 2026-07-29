@@ -990,17 +990,33 @@ export async function getClinicSettings(): Promise<ClinicSettings> {
 }
 
 /**
- * Fetches the subscription / trial row for the signed-in clinic owner.
- * RLS on public.clinics scopes the SELECT to one row (owner_user_id =
- * auth.uid()), so no explicit filter is needed.
+ * Fetches the billing/subscription row for the signed-in owner. Billing is
+ * ACCOUNT-level (Phase B): RLS on public.accounts scopes the SELECT to the
+ * owner's one account, so no explicit filter is needed. The billing view does
+ * not use a clinic name, so `name` is left blank.
  */
 export async function getClinicBilling(): Promise<ClinicBilling | null> {
   const { data, error } = await supabase
-    .from('clinics')
-    .select('id, name, plan, trial_end, subscription_status, created_at')
+    .from('accounts')
+    .select(
+      'id, tier, trial_end, paid_until, subscription_status, created_at, billing_period, billing_plans!inner(display_name, monthly_centavos, annual_centavos)'
+    )
     .maybeSingle();
-  if (error) throw new Error(error.message);
-  return (data as ClinicBilling | null) ?? null;
+  if (error || !data) return null;
+  const plan = Array.isArray(data.billing_plans) ? data.billing_plans[0] : data.billing_plans;
+  return {
+    id: data.id,
+    name: '',
+    plan: data.tier,
+    trial_end: data.trial_end,
+    paid_until: data.paid_until,
+    subscription_status: data.subscription_status,
+    created_at: data.created_at,
+    billing_period: data.billing_period,
+    planLabel: plan.display_name,
+    planMonthlyCentavos: plan.monthly_centavos,
+    planAnnualCentavos: plan.annual_centavos,
+  } as ClinicBilling;
 }
 
 export async function updateClinicSettings(
@@ -1254,6 +1270,24 @@ export async function deleteExpense(id: number): Promise<void> {
 }
 
 // ════════════════════════════════════════════════════════════════════
+//  CLINICS (branches)
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Lists the signed-in account's clinics (branches). Unlike every other
+ * tenant-scoped read in this file, this does NOT depend on the
+ * `x-clinic-id` header — `clinics` has an owner-scoped SELECT policy
+ * (`auth.uid() = owner_user_id`), so it always returns every clinic the
+ * account owns regardless of which one is currently active. That's what
+ * makes it safe to call before an active clinic has been chosen.
+ */
+export async function getClinics(): Promise<{ id: string; name: string }[]> {
+  return fetchAll<{ id: string; name: string }>(() =>
+    supabase.from('clinics').select('id, name').order('name'),
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
 //  NOTIFICATIONS
 // ════════════════════════════════════════════════════════════════════
 
@@ -1485,6 +1519,8 @@ export const api = {
   createExpense,
   updateExpense,
   deleteExpense,
+  // Clinics
+  getClinics,
   // Notifications
   getNotifications,
   fetchNotifications,

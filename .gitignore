@@ -38,5 +38,10 @@ desktop.ini
 .env.local
 .env.*.local
 
+# Supabase CLI local state — pooler-url holds a DB connection string
+# WITH the password in it. Never commit this directory.
+supabase/.temp/
+supabase/.branches/
+
 # Claude / AI tooling caches
 .claude/

@@ -103,7 +103,7 @@ export default function CheckoutSuccessPage() {
               <Step
                 n={3}
                 title={`First charge on ${formatDate(trialEnd)}`}
-                body="Your card is held by NextPay and only billed once the 14-day trial ends. Cancel from Settings → Billing to avoid the charge."
+                body="You'll pay by GCash/Maya QR after your 18-day trial ends — nothing is charged today. Cancel from Settings → Billing anytime before then."
               />
             </ol>
           </div>

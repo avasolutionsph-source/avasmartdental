@@ -21,5 +21,10 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  // Tests run under Vitest (esbuild), not the production tsc build. One test
+  // imports the Deno edge-function client (supabase/functions/_shared), whose
+  // parameter-property syntax is valid for Deno but trips erasableSyntaxOnly
+  // here — and test files shouldn't be in the app bundle anyway. Exclude them.
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
 }

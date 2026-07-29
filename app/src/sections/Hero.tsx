@@ -44,7 +44,7 @@ export function Hero() {
         </div>
 
         <p className="fade-in fade-in-d3 mt-4 text-xs text-fg-subtle">
-          14 days free · no credit card · cancel anytime
+          18 days free · pay by GCash/Maya QR · cancel anytime
         </p>
       </div>
 
