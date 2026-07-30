@@ -992,8 +992,9 @@ export async function getClinicSettings(): Promise<ClinicSettings> {
 /**
  * Fetches the billing/subscription row for the signed-in owner. Billing is
  * ACCOUNT-level (Phase B): RLS on public.accounts scopes the SELECT to the
- * owner's one account, so no explicit filter is needed. The billing view does
- * not use a clinic name, so `name` is left blank.
+ * owner's one account, so no explicit filter is needed. The Account-details
+ * card also shows the active clinic's name, fetched separately below — the
+ * custom fetch scopes that `clinics` read to the x-clinic-id (active) clinic.
  */
 export async function getClinicBilling(): Promise<ClinicBilling | null> {
   const { data, error } = await supabase
@@ -1003,10 +1004,13 @@ export async function getClinicBilling(): Promise<ClinicBilling | null> {
     )
     .maybeSingle();
   if (error || !data) return null;
+  // Active clinic name for the "Clinic name" field. Scoped to the active clinic
+  // by the x-clinic-id header; limit(1) keeps it single even mid-switch.
+  const { data: clinicRow } = await supabase.from('clinics').select('name').limit(1).maybeSingle();
   const plan = Array.isArray(data.billing_plans) ? data.billing_plans[0] : data.billing_plans;
   return {
     id: data.id,
-    name: '',
+    name: clinicRow?.name ?? '',
     plan: data.tier,
     trial_end: data.trial_end,
     paid_until: data.paid_until,
