@@ -13,7 +13,7 @@ import {
   FileText,
   X,
 } from 'lucide-react';
-import type { Invoice, Payment, Patient, InstallmentPlan, InvoiceItem } from '@/types/models';
+import type { Invoice, Payment, Patient, InstallmentPlan, InvoiceItem, ClinicSettings } from '@/types/models';
 import {
   formatMoney,
   formatDate,
@@ -137,6 +137,7 @@ export default function BillingPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [paymentsMap, setPaymentsMap] = useState<Record<number, Payment[]>>({});
   const [plansMap, setPlansMap] = useState<Record<number, InstallmentPlan>>({});
+  const [clinicSettings, setClinicSettings] = useState<ClinicSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   // ─── Filters ─────────────────────────────────────────────────────
@@ -164,10 +165,15 @@ export default function BillingPage() {
     (async () => {
       setLoading(true);
       try {
-        const [invs, pts] = await Promise.all([api.getInvoices(), api.getPatients()]);
+        const [invs, pts, settings] = await Promise.all([
+          api.getInvoices(),
+          api.getPatients(),
+          api.getClinicSettings().catch(() => null),
+        ]);
         if (cancelled) return;
         setInvoices(invs);
         setPatients(pts);
+        setClinicSettings(settings);
 
         const pmMap: Record<number, Payment[]> = {};
         const plMap: Record<number, InstallmentPlan> = {};
@@ -1496,13 +1502,14 @@ export default function BillingPage() {
               {/* Header */}
               <div className="text-center border-b border-gray-200 pb-4">
                 <h2 className="text-xl font-bold text-gray-900">
-                  Ava Smart Dental
+                  {clinicSettings?.clinic_name || 'Your Clinic'}
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  Your clinic address goes here — set it in Settings.
+                  {clinicSettings?.address || 'Set your clinic address in Settings.'}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Contact: (your contact number) | hello@avasmartdental.ph
+                  {[clinicSettings?.phone, clinicSettings?.email].filter(Boolean).join(' | ') ||
+                    'Set your contact number and email in Settings.'}
                 </p>
                 <div className="mt-3">
                   <span className="inline-block rounded border-2 border-gray-800 px-4 py-1 text-sm font-bold tracking-widest text-gray-800">
