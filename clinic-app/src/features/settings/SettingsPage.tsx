@@ -1347,7 +1347,11 @@ function BillingSection({ billing, onPaid }: { billing: ClinicBilling | null; on
             <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
               {isTrialing ? 'Trial ends' : 'Next charge'}
             </dt>
-            <dd className="mt-1 text-sm text-gray-900">{formatDate(billing.trial_end)}</dd>
+            <dd className="mt-1 text-sm text-gray-900">
+              {/* While trialing this is the trial end; once paid the next charge
+                  is when the paid period lapses (paid_until), not trial_end. */}
+              {formatDate(isTrialing ? billing.trial_end : (billing.paid_until ?? billing.trial_end))}
+            </dd>
           </div>
           <div>
             <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Paid through</dt>
