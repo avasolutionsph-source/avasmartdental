@@ -1367,9 +1367,9 @@ function BillingSection({ billing, onPaid }: { billing: ClinicBilling | null; on
         Need help with billing? Email{' '}
         <a
           className="font-medium text-primary-600 hover:underline"
-          href="mailto:support@avasmartdental.ph"
+          href="mailto:avasolutionsph@gmail.com"
         >
-          support@avasmartdental.ph
+          avasolutionsph@gmail.com
         </a>
         .
       </p>
