@@ -33,16 +33,23 @@ export function TopBar() {
   const currentUser = useAppStore((s) => s.currentUser);
   const toggleMobileMenu = useAppStore((s) => s.toggleMobileMenu);
 
-  const displayName = currentUser?.name ?? user?.email ?? 'User';
-  const initials =
-    currentUser?.name
-      ?.split(' ')
-      .map((n) => n[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase() ??
-    user?.email?.[0]?.toUpperCase() ??
-    'U';
+  // Real name comes from what signup collected (contact_name), falling back to
+  // the clinic name, then the email. currentUser (store) is only an optional
+  // override; it's null by default so no placeholder name can appear.
+  const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
+  const pick = (k: string) =>
+    typeof meta[k] === 'string' && (meta[k] as string).trim() ? (meta[k] as string).trim() : '';
+  const metaName = pick('contact_name') || pick('full_name') || pick('name') || pick('clinic_name');
+  const nameSource = currentUser?.name ?? (metaName || '');
+  const displayName = nameSource || user?.email || 'User';
+  const initials = nameSource
+    ? nameSource
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : user?.email?.[0]?.toUpperCase() ?? 'U';
 
   async function handleSignOut() {
     setUserMenuOpen(false);
@@ -201,7 +208,7 @@ export function TopBar() {
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
               <div className="px-4 py-2 border-b border-gray-100">
                 <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
-                {user?.email && currentUser?.name && (
+                {user?.email && displayName !== user.email && (
                   <p className="text-xs text-gray-500 truncate">{user.email}</p>
                 )}
               </div>

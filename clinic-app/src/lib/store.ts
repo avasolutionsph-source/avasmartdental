@@ -24,7 +24,10 @@ export const useAppStore = create<AppState>((set) => ({
   toggleMobileMenu: () =>
     set((state) => ({ mobileMenuOpen: !state.mobileMenuOpen })),
 
-  currentUser: { name: 'Dr. Maria Santos', role: 'admin', avatar: null },
+  // No hardcoded default — the real display name is derived from the signed-in
+  // auth user in the TopBar. This stays null unless something explicitly sets it
+  // (e.g. a future profile-edit flow), so no placeholder name can leak through.
+  currentUser: null,
   setCurrentUser: (user) => set({ currentUser: user }),
 
   searchOpen: false,

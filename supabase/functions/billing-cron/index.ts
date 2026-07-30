@@ -4,13 +4,18 @@ import { serviceClient } from '../_shared/db.ts';
 const DAY = 86_400_000;
 
 /**
- * Resend. Kept behind this one function so swapping providers is a single
- * edit. Never throws — a failed reminder must not abort the cron run or block
- * the lapse transitions below. With no RESEND_API_KEY set it logs only, which
- * is the current (email-deferred) state.
+ * Brevo (transactional email API). Kept behind this one function so swapping
+ * providers is a single edit. Never throws — a failed reminder must not abort
+ * the cron run or block the lapse transitions below. With no BREVO_API_KEY set
+ * it logs only, which is the email-deferred state; the paywall never depends on
+ * email.
+ *
+ * Sender uses the already DNS-authenticated avasolutions.ph domain in Brevo
+ * (from the AvaSpaCentral OTP work), so no new domain/DNS setup is required.
+ * Override the address/name with BILLING_EMAIL_FROM / BILLING_EMAIL_FROM_NAME.
  */
 async function sendBillingEmail(to: string, kind: string, ctx: Record<string, unknown>) {
-  const key = Deno.env.get('RESEND_API_KEY');
+  const key = Deno.env.get('BREVO_API_KEY');
   if (!key) { console.log('BILLING_EMAIL (no key, logged only)', { to, kind, ctx }); return; }
 
   const daysLeft = Number(ctx.daysLeft ?? 0);
@@ -19,15 +24,22 @@ async function sendBillingEmail(to: string, kind: string, ctx: Record<string, un
     ? `Your Ava Smart Dental trial ends in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`
     : `Your Ava Smart Dental subscription renews in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
 
+  const senderEmail = Deno.env.get('BILLING_EMAIL_FROM') ?? 'no-reply@avasolutions.ph';
+  const senderName = Deno.env.get('BILLING_EMAIL_FROM_NAME') ?? 'Ava Smart Dental';
+
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      headers: {
+        'api-key': key,
+        'Content-Type': 'application/json',
+        'accept': 'application/json',
+      },
       body: JSON.stringify({
-        from: Deno.env.get('BILLING_EMAIL_FROM') ?? 'Ava Smart Dental <billing@avasmartdental.ph>',
-        to: [to],
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: to }],
         subject,
-        html: `<p>Hi ${ctx.clinic ?? 'there'},</p>
+        htmlContent: `<p>Hi ${ctx.clinic ?? 'there'},</p>
                <p>${trial ? 'Your free trial' : 'Your subscription'} ends in
                <strong>${daysLeft} day${daysLeft === 1 ? '' : 's'}</strong>.
                Open Settings → Billing to show your GCash/Maya QR code and pay.</p>
@@ -35,9 +47,9 @@ async function sendBillingEmail(to: string, kind: string, ctx: Record<string, un
                <p>Your patient records are always safe — nothing is ever deleted.</p>`,
       }),
     });
-    if (!res.ok) console.error('resend failed', res.status, await res.text());
+    if (!res.ok) console.error('brevo failed', res.status, await res.text());
   } catch (e) {
-    console.error('resend threw', e);
+    console.error('brevo threw', e);
   }
 }
 
