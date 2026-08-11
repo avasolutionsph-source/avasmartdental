@@ -1028,12 +1028,25 @@ export async function getClinicBilling(): Promise<ClinicBilling | null> {
  * Toggles "cancel at period end" for the signed-in owner's account via the
  * set-subscription-cancel edge function (service-role there — direct owner
  * UPDATE on accounts is RLS-locked). `cancel: false` resumes.
+ *
+ * Uses a raw fetch (NOT supabase.functions.invoke) on purpose: invoke injects
+ * an `x-client-info` header, which the functions' CORS allowlist
+ * (_shared/http.ts) doesn't permit, so the browser blocks the preflight. This
+ * mirrors PayInvoiceCard's create-invoice call — authorization + apikey only.
  */
 export async function setSubscriptionCancel(cancel: boolean): Promise<void> {
-  const { error } = await supabase.functions.invoke('set-subscription-cancel', {
-    body: { cancel },
+  const { data: { session } } = await supabase.auth.getSession();
+  const base = import.meta.env.VITE_SUPABASE_URL as string;
+  const res = await fetch(`${base}/functions/v1/set-subscription-cancel`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${session?.access_token}`,
+      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ cancel }),
   });
-  if (error) throw new Error(error.message);
+  if (!res.ok) throw new Error(`request_failed_${res.status}`);
 }
 
 export async function updateClinicSettings(
