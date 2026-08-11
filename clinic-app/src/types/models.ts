@@ -319,6 +319,7 @@ export type ClinicBilling = {
   trial_end: string;
   paid_until: string;
   subscription_status: 'trialing' | 'active' | 'past_due' | 'canceled';
+  cancel_at_period_end: boolean;
   created_at: string;
   billing_period: 'monthly' | 'annual' | null;
   planLabel: string;

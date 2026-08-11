@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
   // Billing is account-level (Phase B). Iterate accounts, not clinics.
   const { data: accounts } = await db
     .from('accounts')
-    .select('id, paid_until, grace_days, subscription_status, owner_user_id')
+    .select('id, paid_until, grace_days, subscription_status, owner_user_id, cancel_at_period_end')
     .neq('subscription_status', 'canceled');
 
   let reminders = 0, lapsed = 0;
@@ -80,7 +80,9 @@ Deno.serve(async (req) => {
       daysLeft === 3 ? (onTrial ? 'trial_t3' : 'renewal_t3') :
       daysLeft === 1 ? (onTrial ? 'trial_t1' : 'renewal_t1') : null;
 
-    if (kind) {
+    // Don't nag someone who already asked to cancel — they keep access until
+    // the period lapses, then get flipped to 'canceled' below.
+    if (kind && !a.cancel_at_period_end) {
       // Insert first; a duplicate key means it already went out.
       const { error } = await db.from('billing_reminders')
         .insert({ account_id: a.id, kind, period_start: a.paid_until });
@@ -97,7 +99,11 @@ Deno.serve(async (req) => {
     // write-blocking is done by RLS off the dates, so it cannot drift.
     const graceEnds = paidUntil + a.grace_days * DAY;
     if (now > graceEnds && a.subscription_status !== 'past_due') {
-      await db.from('accounts').update({ subscription_status: 'past_due' }).eq('id', a.id);
+      // A pending cancellation lapses straight to 'canceled' (a clean end state
+      // the cron then skips); everyone else goes 'past_due'. Either way the
+      // write-lock already applies via date-based RLS.
+      const nextStatus = a.cancel_at_period_end ? 'canceled' : 'past_due';
+      await db.from('accounts').update({ subscription_status: nextStatus }).eq('id', a.id);
       lapsed++;
     }
   }
