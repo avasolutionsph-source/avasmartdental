@@ -1251,6 +1251,32 @@ function BillingSection({ billing, onPaid }: { billing: ClinicBilling | null; on
   const isTrialing = billing.subscription_status === 'trialing';
   const trialExpired = isTrialing && trialDaysLeft <= 0;
 
+  const toast = useToast();
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  // The access-through date: trial end while trialing, else paid_until.
+  const periodEndLabel = formatDate(
+    isTrialing ? billing.trial_end : (billing.paid_until ?? billing.trial_end),
+  );
+  const canceling = billing.cancel_at_period_end;
+  const canCancel =
+    (billing.subscription_status === 'trialing' || billing.subscription_status === 'active') &&
+    !canceling;
+
+  async function applyCancel(cancel: boolean) {
+    setCancelBusy(true);
+    try {
+      await api.setSubscriptionCancel(cancel);
+      onPaid(); // refetch billing everywhere (banner + this card)
+      toast.success(cancel ? 'Subscription canceled' : 'Subscription resumed');
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setCancelBusy(false);
+      setShowCancelConfirm(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Plan hero */}
@@ -1361,6 +1387,66 @@ function BillingSection({ billing, onPaid }: { billing: ClinicBilling | null; on
           </div>
         </dl>
       </Card>
+
+      {/* Cancel / resume subscription */}
+      {(canCancel || canceling) && (
+        <Card>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-base font-semibold text-gray-900">
+                {canceling ? 'Subscription canceled' : 'Cancel subscription'}
+              </p>
+              <p className="mt-1 text-sm text-gray-500">
+                {canceling
+                  ? `You'll keep full access until ${periodEndLabel}, then the account becomes read-only. Your patient data is never deleted — resume anytime.`
+                  : `Keep full access until ${periodEndLabel}, then your account becomes read-only. Your patient data is never deleted.`}
+              </p>
+            </div>
+            {canceling ? (
+              <Button
+                variant="outline"
+                onClick={() => applyCancel(false)}
+                loading={cancelBusy}
+                className="shrink-0"
+              >
+                Resume subscription
+              </Button>
+            ) : (
+              <Button
+                variant="danger"
+                onClick={() => setShowCancelConfirm(true)}
+                className="shrink-0"
+              >
+                Cancel subscription
+              </Button>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Cancel confirmation */}
+      <Modal
+        isOpen={showCancelConfirm}
+        onClose={() => setShowCancelConfirm(false)}
+        title="Cancel subscription?"
+        size="md"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setShowCancelConfirm(false)}>
+              Keep subscription
+            </Button>
+            <Button variant="danger" onClick={() => applyCancel(true)} loading={cancelBusy}>
+              Yes, cancel
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-600">
+          You'll keep full access until <strong>{periodEndLabel}</strong>. After that your
+          account becomes read-only — you can still view records, but not add or edit. Your
+          patient data is <strong>never deleted</strong>, and you can resume or pay anytime.
+        </p>
+      </Modal>
 
       {/* Help footer */}
       <p className="text-xs text-gray-500">

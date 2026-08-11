@@ -6,6 +6,9 @@ verify_jwt = true
 [functions.add-clinic]
 verify_jwt = true
 
+[functions.set-subscription-cancel]
+verify_jwt = true
+
 [functions.invoice-status]
 verify_jwt = true
 

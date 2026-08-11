@@ -1000,7 +1000,7 @@ export async function getClinicBilling(): Promise<ClinicBilling | null> {
   const { data, error } = await supabase
     .from('accounts')
     .select(
-      'id, tier, trial_end, paid_until, subscription_status, created_at, billing_period, billing_plans!inner(display_name, monthly_centavos, annual_centavos)'
+      'id, tier, trial_end, paid_until, subscription_status, cancel_at_period_end, created_at, billing_period, billing_plans!inner(display_name, monthly_centavos, annual_centavos)'
     )
     .maybeSingle();
   if (error || !data) return null;
@@ -1015,12 +1015,25 @@ export async function getClinicBilling(): Promise<ClinicBilling | null> {
     trial_end: data.trial_end,
     paid_until: data.paid_until,
     subscription_status: data.subscription_status,
+    cancel_at_period_end: data.cancel_at_period_end ?? false,
     created_at: data.created_at,
     billing_period: data.billing_period,
     planLabel: plan.display_name,
     planMonthlyCentavos: plan.monthly_centavos,
     planAnnualCentavos: plan.annual_centavos,
   } as ClinicBilling;
+}
+
+/**
+ * Toggles "cancel at period end" for the signed-in owner's account via the
+ * set-subscription-cancel edge function (service-role there — direct owner
+ * UPDATE on accounts is RLS-locked). `cancel: false` resumes.
+ */
+export async function setSubscriptionCancel(cancel: boolean): Promise<void> {
+  const { error } = await supabase.functions.invoke('set-subscription-cancel', {
+    body: { cancel },
+  });
+  if (error) throw new Error(error.message);
 }
 
 export async function updateClinicSettings(
@@ -1492,6 +1505,7 @@ export const api = {
   getClinicSettings,
   updateClinicSettings,
   getClinicBilling,
+  setSubscriptionCancel,
   getDentists,
   createDentist,
   updateDentist,
